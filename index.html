@@ -2867,4 +2867,13 @@ let toastT;
 function showToast(msg,type='') {
   const el=document.getElementById('toast');
   const icons={success:'✓',error:'✗',warn:'⚠'};
-  el.innerHTML=`${icons[type]?`<span>
+  el.innerHTML=`${icons[type]?`<span><span style="font-size:.85rem">${icons[type]}</span>`:''}${msg}`;
+  el.className='show'+(type?' '+type:'');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+initFirebase();
+</script>
+</body>
+</html>
