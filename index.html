@@ -1126,6 +1126,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
             <option value="ticket">🎫 Tournament Ticket</option>
           </select>
         </div>
+        <div class="inp-g"><label style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase">Custom Image URL (optional)</label><input class="inp" id="wp-image" placeholder="https://...image.png (slice pe dikhega)" style="margin-top:4px"></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-outline btn-sm" style="flex:1" onclick="addWheelPrize()"><i class="fas fa-plus"></i> Add Prize</button>
           <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveWheelSettings()"><i class="fas fa-save"></i> Save Settings</button>
@@ -1985,37 +1986,73 @@ async function confirmJoin() {
 
 async function joinTournament(tid) {
   if(!currentUser||!userData) return;
+  const joinBtn = document.querySelector(`[onclick="openJoinConfirm('${tid}')"]`);
+  if(joinBtn){joinBtn.disabled=true;joinBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Joining...';}
   try {
-    const snap=await db.ref('tournaments/'+tid).once('value');
-    if(!snap.exists()){showToast('Tournament not found','error');return;}
-    const t=snap.val();
+    // Fresh snapshot from Firebase - latest data lao
+    const [tSnap, uSnap] = await Promise.all([
+      db.ref('tournaments/'+tid).once('value'),
+      db.ref('users/'+currentUser.uid).once('value')
+    ]);
+    if(!tSnap.exists()){showToast('Tournament not found','error');return;}
+    const t=tSnap.val();
+    const freshUser=uSnap.val()||{};
     const fee=t.entryFee||0;
-    if(fee>(userData.wallet||0)){showToast('Insufficient balance!','warn');openAddMoney();return;}
-    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament is full!','error');return;}
-    const myIds=getMyMatchIds();
-    if(myIds.includes(tid)){showToast('Already joined!','warn');return;}
-    const newBal=(userData.wallet||0)-fee;
+    const curBal=freshUser.wallet||0;
+
+    // Fresh checks with live data
+    if(curBal<fee){showToast('Balance kam hai! Add money karo.','warn');openAddMoney();return;}
+    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament full ho gaya!','error');loadTournaments();return;}
+
+    // Already joined check (fresh from Firebase)
+    const regSnap=await db.ref('users/'+currentUser.uid+'/registeredMatches').once('value');
+    const regData=regSnap.val()||{};
+    const alreadyJoined=Object.values(regData).some(m=>m&&m.id===tid);
+    if(alreadyJoined){showToast('Already joined!','warn');return;}
+
+    const newBal=curBal-fee;
     const mKey=db.ref().push().key, txKey=db.ref().push().key;
     const matchEntry={id:tid,name:t.name,status:'upcoming',prizePool:t.prizePool,entryFee:fee,map:t.map,mode:t.mode||'solo',joinedAt:Date.now()};
     const tx={type:'Tournament Join',amount:-fee,date:Date.now(),status:'completed',desc:t.name};
+    const newXP=(freshUser.xp||0)+XP_PER_MATCH;
     const upd={};
     upd['users/'+currentUser.uid+'/wallet']=newBal;
     upd['users/'+currentUser.uid+'/registeredMatches/'+mKey]=matchEntry;
     upd['users/'+currentUser.uid+'/transactions/'+txKey]=tx;
-    upd['tournaments/'+tid+'/registered']=(t.registered||0)+1;
-    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||'Player',ign:userData.ign||'',squad:userData.squad||'',joinedAt:Date.now()};
-    // XP gain
-    const newXP=(userData.xp||0)+XP_PER_MATCH;
     upd['users/'+currentUser.uid+'/xp']=newXP;
+    upd['tournaments/'+tid+'/registered']=(t.registered||0)+1;
+    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||freshUser.name||'Player',ign:userData.ign||freshUser.ign||'',squad:userData.squad||freshUser.squad||'',joinedAt:Date.now()};
     await db.ref().update(upd);
+
+    // Local userData sync
     userData.wallet=newBal;
     userData.xp=newXP;
-    if(!userData.registeredMatches) userData.registeredMatches={};
+    if(!userData.registeredMatches||Array.isArray(userData.registeredMatches)) userData.registeredMatches={};
     userData.registeredMatches[mKey]=matchEntry;
+
     showToast('Joined! 🎮 +'+XP_PER_MATCH+' XP','success');
+
+    // Send join notification
+    try {
+      const nk=db.ref().push().key;
+      await db.ref('notifications/'+currentUser.uid+'/'+nk).set({
+        title:'🎮 Tournament Joined!',body:'You joined: '+t.name+'. Get ready!',type:'tournament',date:Date.now(),read:false
+      });
+    } catch(e){}
+
     loadTournaments();
     updateHeroBanner();
-  } catch(e){console.error(e);showToast('Error joining','error');}
+    updateSideMenu();
+  } catch(e){
+    console.error('Join error:',e);
+    if(e.code==='PERMISSION_DENIED'){
+      showToast('Permission error. Firebase Rules check karo.','error');
+    } else {
+      showToast('Join mein error aaya. Dobara try karo.','error');
+    }
+  } finally {
+    if(joinBtn){joinBtn.disabled=false;joinBtn.innerHTML='<i class="fas fa-gamepad"></i> Join Now';}
+  }
 }
 
 // ── TOURNAMENT DETAIL ──
@@ -3359,27 +3396,56 @@ const DEFAULT_PRIZES=[
 let spinPrizes=DEFAULT_PRIZES;
 let spinIsSpinning=false;
 
-// ── SPIN WHEEL DRAW ──
+// ── SPIN WHEEL DRAW (Equal slices, custom image support) ──
 function drawWheel(angle=0) {
   const canvas=document.getElementById('spin-canvas');
   if(!canvas) return;
   const ctx=canvas.getContext('2d');
   const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,r=cx-6;
-  const total=spinPrizes.reduce((s,p)=>s+(p.prob||1),0);
+  const N=spinPrizes.length;
+  if(!N) return;
+  const sliceAngle=(2*Math.PI)/N; // EQUAL slices for all prizes
   ctx.clearRect(0,0,W,H);
   let start=angle;
-  spinPrizes.forEach(p=>{
-    const slice=(p.prob/total)*2*Math.PI;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+slice);
+  spinPrizes.forEach((p,i)=>{
+    // Draw slice
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+sliceAngle);
     ctx.fillStyle=p.color||'#1565c0';ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=2;ctx.stroke();
-    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+slice/2);
-    ctx.textAlign='right';ctx.fillStyle='#fff';
-    ctx.font=`bold ${spinPrizes.length>7?'9px':'11px'} "Exo 2",sans-serif`;
-    ctx.shadowBlur=5;ctx.shadowColor='rgba(0,0,0,.9)';
-    ctx.fillText(p.label,r-10,4);ctx.restore();
-    start+=slice;
+    ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=2;ctx.stroke();
+
+    // Draw image or text
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start+sliceAngle/2);
+    const midR=r*0.62;
+
+    if(p.image){
+      // Custom image
+      const img=new Image();
+      img.src=p.image;
+      // Draw inline (sync if cached)
+      if(img.complete&&img.naturalWidth){
+        const sz=N>7?22:28;
+        ctx.drawImage(img,midR-sz/2,-sz/2,sz,sz);
+      } else {
+        img.onload=()=>drawWheel(angle); // redraw when loaded
+      }
+      // label below image
+      ctx.textAlign='center';ctx.fillStyle='#fff';
+      ctx.font=`bold ${N>7?'7px':'9px'} "Exo 2",sans-serif`;
+      ctx.shadowBlur=4;ctx.shadowColor='rgba(0,0,0,.9)';
+      const sz=N>7?22:28;
+      ctx.fillText(p.label,midR,sz/2+10);
+    } else {
+      ctx.textAlign='right';ctx.fillStyle='#fff';
+      ctx.font=`bold ${N>7?'9px':'11px'} "Exo 2",sans-serif`;
+      ctx.shadowBlur=5;ctx.shadowColor='rgba(0,0,0,.9)';
+      ctx.fillText(p.label,r-10,4);
+    }
+    ctx.restore();
+    start+=sliceAngle;
   });
+  // Center circle
   ctx.beginPath();ctx.arc(cx,cy,20,0,2*Math.PI);
   ctx.fillStyle='#060d1b';ctx.fill();
   ctx.strokeStyle='rgba(0,229,255,.6)';ctx.lineWidth=3;ctx.stroke();
@@ -3410,19 +3476,16 @@ async function doSpin() {
   const res=document.getElementById('spin-result-box');
   if(res) res.style.display='none';
 
-  // Pick prize
+  // Pick prize using prob weights (admin controls win chance via prob)
   const total=spinPrizes.reduce((s,p)=>s+(p.prob||1),0);
   let rand=Math.random()*total,cum=0,chosen=0;
   for(let i=0;i<spinPrizes.length;i++){cum+=spinPrizes[i].prob||1;if(rand<=cum){chosen=i;break;}}
-  const prize=spinPrizes[chosen];
 
-  // Target angle
-  let sliceStart=0;
-  for(let i=0;i<chosen;i++) sliceStart+=spinPrizes[i].prob||1;
-  const totalP=total;
-  const sliceCenter=sliceStart+(spinPrizes[chosen].prob||1)/2;
-  const targetFrac=sliceCenter/totalP;
-  const totalSpin=5*2*Math.PI+(2*Math.PI-targetFrac*2*Math.PI-Math.PI/2);
+  // Target angle — equal visual slices, so each slice = 2PI/N
+  const N=spinPrizes.length;
+  const sliceAngle=(2*Math.PI)/N;
+  // Land at center of chosen slice (pointer at top = -PI/2)
+  const targetAngle=5*2*Math.PI+(2*Math.PI - chosen*sliceAngle - sliceAngle/2 - Math.PI/2);
   const duration=4500;
   const startTime=performance.now();
 
@@ -3430,12 +3493,12 @@ async function doSpin() {
     const elapsed=now-startTime;
     const progress=Math.min(elapsed/duration,1);
     const ease=1-Math.pow(1-progress,4);
-    drawWheel(totalSpin*ease);
+    drawWheel(targetAngle*ease);
     if(progress<1){requestAnimationFrame(animate);}
     else{
       spinIsSpinning=false;
       if(btn){btn.disabled=false;btn.style.opacity='1';}
-      awardSpinPrize(prize,cost);
+      awardSpinPrize(spinPrizes[chosen],cost);
     }
   }
   requestAnimationFrame(animate);
@@ -3539,13 +3602,12 @@ function addWheelPrize() {
   const prob=parseInt(document.getElementById('wp-prob')?.value)||10;
   const color=document.getElementById('wp-color')?.value||'#1565c0';
   const type=document.getElementById('wp-type')?.value||'cash';
+  const image=document.getElementById('wp-image')?.value.trim()||'';
   if(!label){showToast('Label required!','error');return;}
   if(prob<1||prob>100){showToast('Probability 1-100 hona chahiye!','error');return;}
-  adminWheelPrizes.push({label,value,prob,color,type});
+  adminWheelPrizes.push({label,value,prob,color,type,image});
   renderAdminWheelPrizes();
-  document.getElementById('wp-label').value='';
-  document.getElementById('wp-value').value='';
-  document.getElementById('wp-prob').value='';
+  ['wp-label','wp-value','wp-prob','wp-image'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   showToast('Prize added! Save karna mat bhoolo.','success');
 }
 
