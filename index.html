@@ -853,7 +853,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
       </div>
       <div class="support-item" id="sup-em" onclick="window.open('mailto:support@synextournament.com','_blank')">
         <div class="support-icon" style="background:rgba(66,165,245,.15);color:var(--blue3)"><i class="fas fa-envelope"></i></div>
-        <div class="support-text"><div class="support-title">Email Support</div><div class="support-sub" id="sup-em-txt">support@synextournament.com</div></div>
+        <div class="support-text"><div class="support-title">Email Support</div><div class="support-sub" id="sup-em-txt"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="0e7d7b7e7e617c7a4e7d77606b767a617b7c606f636b607a206d6163">[email&#160;protected]</a></div></div>
         <i class="fas fa-chevron-right" style="color:var(--muted);font-size:.8rem"></i>
       </div>
     </div>
@@ -1516,21 +1516,23 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
 </div>
 
 <!-- ══════════ FIREBASE AUTH ONLY (No DB calls) ══════════ -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
 // ========== BACKEND API URL ==========
-const API_BASE = 'https://Bgoftr.onrender.com/api';
+const API_BASE = 'https://bgoftr.onrender.com/api';
 
 // ========== FIREBASE CONFIG (Auth only) ==========
+// ⚠️ SECURITY: Apna original Firebase config yahan paste karo.
+// Is file ko publicly share mat karo - config ko secure rakho.
 const firebaseConfig = {
-  apiKey: "AIzaSyA_zA-siOL72nHKCCMW9zk891HDWkbeOgs",
-  authDomain: "k-upl-6a0db.firebaseapp.com",
-  projectId: "k-upl-6a0db",
-  storageBucket: "k-upl-6a0db.firebasestorage.app",
-  messagingSenderId: "1024864441721",
-  appId: "1:1024864441721:web:7f9b2040c57bc3d5c44ba8"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
 // ========== GLOBAL VARIABLES ==========
@@ -1629,8 +1631,10 @@ async function doLogin() {
 }
 
 async function doGoogleLogin() {
-  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-  catch (e) { showToast('Google login failed', 'error'); }
+  try {
+    // Mobile browsers mein popup kaam nahi karta, redirect use karo
+    await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+  } catch (e) { showToast('Google login failed', 'error'); }
 }
 
 async function doSignup() {
@@ -3697,6 +3701,15 @@ function initFirebase() {
   try {
     firebase.initializeApp(firebaseConfig);
     auth = firebase.auth();
+
+    // Google redirect ke baad result handle karo
+    auth.getRedirectResult().then(result => {
+      if (result && result.user) {
+        currentUser = result.user;
+        loadUserProfile();
+      }
+    }).catch(e => { console.error('Redirect result error:', e); });
+
     auth.onAuthStateChanged(user => {
       if (window._killSplash) window._killSplash();
       if (user) { currentUser = user; loadUserProfile(); }
@@ -3705,13 +3718,84 @@ function initFirebase() {
   } catch (e) { console.error(e); if (window._killSplash) window._killSplash(); showAuth(); }
 }
 
+// ========== START APP ==========
+// Firebase scripts load hone ke baad initFirebase call karo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFirebase);
+} else {
+  initFirebase();
+}
+
+// ========== GLOBAL SCOPE FIX ==========
+// Inline onclick handlers ke liye window pe assign karo
 window.switchAuthTab = switchAuthTab;
 window.togglePass = togglePass;
 window.doLogin = doLogin;
 window.doSignup = doSignup;
 window.doGoogleLogin = doGoogleLogin;
-
-initFirebase();
+window.handleLogout = handleLogout;
+window.navTo = navTo;
+window.openSideMenu = openSideMenu;
+window.closeSideMenu = closeSideMenu;
+window.toggleNotifPanel = toggleNotifPanel;
+window.markAllRead = markAllRead;
+window.markRead = markRead;
+window.filterTournaments = filterTournaments;
+window.openTDetail = openTDetail;
+window.openJoinConfirm = openJoinConfirm;
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.toggleFaq = toggleFaq;
+window.copyText = copyText;
+window.saveField = saveField;
+window.saveStats = saveStats;
+window.openEditBal = openEditBal;
+window.saveEditBal = saveEditBal;
+window.setBMode = setBMode;
+window.updateBalPreview = updateBalPreview;
+window.openWinnerRedeem = openWinnerRedeem;
+window.giveWinnerPrize = giveWinnerPrize;
+window.updateWRForm = updateWRForm;
+window.switchATab = switchATab;
+window.loadAUsers = loadAUsers;
+window.filterUsers = filterUsers;
+window.blockUser = blockUser;
+window.setAdminRole = setAdminRole;
+window.approveDeposit = approveDeposit;
+window.rejectReq = rejectReq;
+window.approveWithdraw = approveWithdraw;
+window.approveInstantDeposit = approveInstantDeposit;
+window.rejectInstantDeposit = rejectInstantDeposit;
+window.createTournament = createTournament;
+window.openEditT = openEditT;
+window.saveTEdit = saveTEdit;
+window.deleteT = deleteT;
+window.openSetRoomModal = openSetRoomModal;
+window.toggleLive = toggleLive;
+window.saveLiveSettings = saveLiveSettings;
+window.adminSendNotif = adminSendNotif;
+window.saveAdminUPI = saveAdminUPI;
+window.previewAdminUPI = previewAdminUPI;
+window.saveAdminSupportSettings = saveAdminSupportSettings;
+window.doSpin = doSpin;
+window.addWheelPrize = addWheelPrize;
+window.removeWheelPrize = removeWheelPrize;
+window.saveWheelSettings = saveWheelSettings;
+window.switchStoreTab = switchStoreTab;
+window.buyItem = buyItem;
+window.confirmBuyItem = confirmBuyItem;
+window.deleteStoreItem = deleteStoreItem;
+window.createStoreItem = createStoreItem;
+window.handleThumbUpload = handleThumbUpload;
+window.toggleThumbMode = toggleThumbMode;
+window.handleIconUpload = handleIconUpload;
+window.handleBannerUpload = handleBannerUpload;
+window.submitDepositReq = submitDepositReq;
+window.submitWithdrawReq = submitWithdrawReq;
+window.submitInstantDep = submitInstantDep;
+window.switchDepMode = switchDepMode;
+window.selectAmt = selectAmt;
+window.useReferralBonus = typeof useReferralBonus !== 'undefined' ? useReferralBonus : ()=>{};
 </script>
 </body>
 </html>
