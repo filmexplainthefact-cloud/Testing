@@ -4250,6 +4250,12 @@ window.doSignup = doSignup;
 window.doGoogleLogin = doGoogleLogin;
 
 initFirebase();
+// App Check enable
+const appCheck = firebase.appCheck();
+appCheck.activate(
+  '6Lf4F6ssAAAAALbKmovWLnnqeNM97frGnXtzLnRy',  // TERI SECRET KEY? NAHI - YE GALAT HAI!
+  true
+);
 </script>
 </body>
 </html>
