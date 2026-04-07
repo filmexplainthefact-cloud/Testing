@@ -510,9 +510,9 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     // Show auth if app not showing
     setTimeout(function(){
       var app = document.getElementById('app');
-      var auth = document.getElementById('page-auth');
-      if(app && !app.classList.contains('show') && auth){
-        auth.style.display='flex';
+      var authPage = document.getElementById('page-auth');
+      if(app && !app.classList.contains('show') && authPage){
+        authPage.style.display='flex';
       }
     }, 800);
   }
@@ -626,6 +626,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     </div>
     <div id="form-signup" style="display:none">
       <div class="inp-g"><label>Your Name</label><input class="inp" id="su-name" type="text" placeholder="Gamer Name" autocomplete="name"></div>
+      <div class="inp-g"><label>Username (@handle)</label><input class="inp" id="su-username" type="text" placeholder="synexgamer99" oninput="this.value=this.value.replace(/[^a-z0-9_.]/gi,'').toLowerCase()" maxlength="20"><div id="uname-check" style="font-size:.68rem;margin-top:3px;font-family:Rajdhani,sans-serif"></div></div>
       <div class="inp-g"><label>Email</label><input class="inp" id="su-email" type="email" placeholder="your@email.com" autocomplete="email"></div>
       <div class="inp-g"><label>Password</label>
         <div class="pass-wrap"><input class="inp" id="su-pass" type="password" placeholder="Min 6 characters" autocomplete="new-password"><button class="pass-eye" onclick="togglePass('su-pass',this)"><i class="fas fa-eye"></i></button></div>
@@ -670,6 +671,8 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     <div class="sm-item active" onclick="navTo('home');closeSideMenu()"><i class="fas fa-home"></i> Home</div>
     <div class="sm-item" onclick="navTo('matches');closeSideMenu()"><i class="fas fa-trophy"></i> My Matches</div>
     <div class="sm-item" onclick="navTo('wallet');closeSideMenu()"><i class="fas fa-wallet"></i> Wallet</div>
+    <div class="sm-item" onclick="navTo('spin');closeSideMenu()"><i class="fas fa-dharmachakra"></i> Spin Wheel</div>
+    <div class="sm-item" onclick="navTo('store');closeSideMenu()"><i class="fas fa-store"></i> Store</div>
     <div class="sm-item" onclick="navTo('leaderboard');closeSideMenu()"><i class="fas fa-crown"></i> Leaderboard</div>
     <div class="sm-divider"></div>
     <div class="sm-section-lbl">Account</div>
@@ -714,6 +717,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
         <div class="hero-stat"><div class="hero-stat-val" id="hero-matches">0</div><div class="hero-stat-lbl">Matches</div></div>
         <div class="hero-stat"><div class="hero-stat-val" id="hero-wins">0</div><div class="hero-stat-lbl">Wins</div></div>
         <div class="hero-stat"><div class="hero-stat-val" id="hero-bal">₹0</div><div class="hero-stat-lbl">Balance</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hero-tickets">🎫0</div><div class="hero-stat-lbl">Tickets</div></div>
       </div>
       <button class="hero-action" onclick="navTo('wallet')"><i class="fas fa-plus"></i> Add Money</button>
     </div>
@@ -811,6 +815,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
       <div class="prof-name" id="prof-name">Loading...</div>
       <div class="prof-email" id="prof-email"></div>
       <div class="prof-squad" id="prof-squad-disp"></div>
+      <div id="prof-username-disp" style="font-size:.72rem;color:var(--muted);font-family:Rajdhani,sans-serif;margin-top:2px"></div>
       <div id="prof-uid" style="display:none"></div>
       <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
         <button class="btn btn-outline btn-sm" onclick="openStatsModal()"><i class="fas fa-edit"></i> Update Stats</button>
@@ -852,7 +857,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
       </div>
       <div class="support-item" id="sup-em" onclick="window.open('mailto:support@synextournament.com','_blank')">
         <div class="support-icon" style="background:rgba(66,165,245,.15);color:var(--blue3)"><i class="fas fa-envelope"></i></div>
-        <div class="support-text"><div class="support-title">Email Support</div><div class="support-sub" id="sup-em-txt">support@synextournament.com</div></div>
+        <div class="support-text"><div class="support-title">Email Support</div><div class="support-sub" id="sup-em-txt"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="61121411110e13152112180f0419150e14130f000c040f154f020e0c">[email&#160;protected]</a></div></div>
         <i class="fas fa-chevron-right" style="color:var(--muted);font-size:.8rem"></i>
       </div>
     </div>
@@ -880,6 +885,57 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     <div style="height:10px"></div>
   </div>
 
+  <!-- SPIN WHEEL -->
+  <div class="page" id="page-spin">
+    <div style="padding:14px">
+      <div style="background:linear-gradient(135deg,#1a0533,#2d0f5e);border-radius:16px;padding:20px;text-align:center;border:1px solid rgba(124,77,255,.4);margin-bottom:14px">
+        <div style="font-family:Orbitron,monospace;font-size:1rem;font-weight:900;color:#fff;margin-bottom:4px">🎡 Spin The Wheel</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:.78rem;color:rgba(255,255,255,.6);margin-bottom:8px">Try your luck! Win cash prizes &amp; rewards</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:12px;padding:5px 14px;font-family:Orbitron,monospace;font-size:.82rem;color:var(--gold)"><i class="fas fa-coins"></i>&nbsp;<span id="spin-cost-display">₹10 per spin</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:14px;position:relative">
+        <div style="width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:32px solid #fff;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));position:absolute;top:-10px;z-index:10"></div>
+        <canvas id="spin-canvas" width="300" height="300" style="border-radius:50%;box-shadow:0 0 30px rgba(124,77,255,.5);border:4px solid rgba(124,77,255,.6)"></canvas>
+        <button id="spin-btn" onclick="doSpin()" style="margin-top:18px;padding:14px 44px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:12px;color:#fff;font-family:Orbitron,monospace;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(124,77,255,.4);letter-spacing:1px"><i class="fas fa-play"></i>&nbsp;SPIN!</button>
+      </div>
+      <div id="spin-result-box" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;display:none">
+        <div style="font-size:2.5rem" id="spin-win-emoji">🎉</div>
+        <div id="spin-result-prize" style="font-family:Orbitron,monospace;font-size:1.3rem;font-weight:900;color:var(--gold);margin:8px 0">—</div>
+        <div id="spin-result-sub" style="font-family:Rajdhani,sans-serif;font-size:.82rem;color:var(--muted)"></div>
+      </div>
+      <div style="margin-top:16px"><div style="font-family:Orbitron,monospace;font-size:.82rem;color:var(--blue3);margin-bottom:8px">Your Spin History</div>
+      <div id="spin-history-list"><div style="text-align:center;padding:16px;color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.82rem">No spins yet</div></div></div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+
+  <!-- STORE -->
+  <div class="page" id="page-store">
+    <div style="padding:14px">
+      <div style="background:linear-gradient(135deg,#0a1f0a,#1b5e20);border-radius:16px;padding:18px;margin-bottom:14px;border:1px solid rgba(0,230,118,.3)">
+        <div style="font-family:Orbitron,monospace;font-size:.95rem;font-weight:900;color:#fff">🛍️ Synex Store</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:.78rem;color:rgba(255,255,255,.6);margin-top:2px">Coupons, Tickets aur items kharido!</div>
+      </div>
+      <div id="store-tab-row" style="display:flex;background:var(--card2);border-radius:10px;padding:4px;margin-bottom:14px;gap:3px">
+        <button onclick="switchStoreTab('coupons',this)" class="stab active-stab" style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;background:linear-gradient(135deg,#1b5e20,var(--success));color:#fff;transition:all .2s">🎟️ Coupons</button>
+        <button onclick="switchStoreTab('tickets',this)" class="stab" style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s">🎫 Tickets</button>
+        <button onclick="switchStoreTab('mine',this)" class="stab" style="flex:1;padding:8px 4px;border:none;border-radius:8px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s">📦 My Items</button>
+      </div>
+      <div id="store-sec-coupons"><div id="store-coupons-list"><div class="loading-wrap"><div class="spin"></div></div></div></div>
+      <div id="store-sec-tickets" style="display:none">
+        <div style="background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.3);border-radius:10px;padding:10px 13px;margin-bottom:10px;font-size:.8rem;font-family:Rajdhani,sans-serif;color:var(--purple)">
+          <i class="fas fa-ticket-alt"></i>&nbsp;Tournament Ticket kharido — sirf ticket wale daily tournament mein join kar sakte hain!
+        </div>
+        <div id="store-tickets-list"><div class="loading-wrap"><div class="spin"></div></div></div>
+      </div>
+      <div id="store-sec-mine" style="display:none">
+        <div style="font-family:Orbitron,monospace;font-size:.82rem;color:var(--blue3);margin-bottom:10px">My Purchased Items</div>
+        <div id="my-store-items"><div class="loading-wrap"><div class="spin"></div></div></div>
+      </div>
+    </div>
+    <div style="height:10px"></div>
+  </div>
+
   <!-- ADMIN -->
   <div class="page" id="page-admin">
     <div class="admin-tabs" id="admin-tabs-bar">
@@ -887,9 +943,11 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
       <div class="admin-tab" onclick="switchATab(this,'adeposits')">💰 Deposits</div>
       <div class="admin-tab" onclick="switchATab(this,'awithdrawals')">📤 Withdraw</div>
       <div class="admin-tab" onclick="switchATab(this,'atournaments')">🏆 Tournaments</div>
+      <div class="admin-tab" onclick="switchATab(this,'awheel')">🎡 Spin Wheel</div>
+      <div class="admin-tab" onclick="switchATab(this,'astore')">🛍️ Store</div>
       <div class="admin-tab" onclick="switchATab(this,'alive')">📺 Live</div>
       <div class="admin-tab" onclick="switchATab(this,'anotifs')">🔔 Notify</div>
-      <div class="admin-tab" onclick="switchATab(this,'aupi')">💳 UPI Settings</div>
+      <div class="admin-tab" onclick="switchATab(this,'aupi')">💳 UPI</div>
       <div class="admin-tab" onclick="switchATab(this,'asupport')">🎧 Support</div>
     </div>
 
@@ -969,6 +1027,12 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
         </div>
         <div class="inp-g"><label>Rules (one per line)</label><textarea class="inp" id="t-rules" placeholder="No hacking&#10;No teaming&#10;Screenshot required" style="height:80px;resize:none"></textarea></div>
         <div style="display:flex;gap:8px">
+          <div class="inp-g" style="flex:1"><label>Entry Type</label>
+            <select class="inp" id="t-entry-type">
+              <option value="normal">💰 Normal (Cash)</option>
+              <option value="ticket">🎫 Ticket Only</option>
+            </select>
+          </div>
           <div class="inp-g" style="flex:1"><label>Featured?</label>
             <select class="inp" id="t-featured">
               <option value="0">Normal</option>
@@ -1037,6 +1101,81 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
       <div id="a-instant-dep-list"><div class="loading-wrap"><div class="spin"></div></div></div>
     </div>
 
+    <!-- SPIN WHEEL ADMIN -->
+    <div class="asec" id="awheel">
+      <div class="sec-title" style="margin-bottom:8px">🎡 Spin Wheel Settings</div>
+      <div class="acard">
+        <div class="inp-g"><label>Spin Cost (₹ per spin)</label><input class="inp" id="wheel-cost-inp" type="number" placeholder="10" min="1" value="10"></div>
+        <div style="background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.3);border-radius:10px;padding:10px;margin-bottom:12px;font-size:.78rem;font-family:Rajdhani,sans-serif;color:var(--warn)"><i class="fas fa-info-circle"></i>&nbsp;<b>Probability tip:</b> "Better Luck" ko 40-50 rakho = admin zyada kamaata hai. Cash prizes ko 5-15 rakho.</div>
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem;color:var(--blue3);margin-bottom:8px">Current Prize Slots:</div>
+        <div id="wheel-prizes-list" style="margin-bottom:10px"></div>
+        <div style="height:1px;background:var(--border);margin:10px 0"></div>
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem;margin-bottom:8px">Add New Prize:</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><label style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase">Label</label><input class="inp" id="wp-label" placeholder="₹5 Cash" style="margin-top:4px"></div>
+          <div style="flex:1"><label style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase">Value (₹)</label><input class="inp" id="wp-value" type="number" placeholder="5" style="margin-top:4px"></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><label style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase">Probability (1-100)</label><input class="inp" id="wp-prob" type="number" placeholder="30" min="1" max="100" style="margin-top:4px"></div>
+          <div style="flex:1"><label style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase">Color</label><input class="inp" id="wp-color" type="color" value="#7c4dff" style="margin-top:4px;padding:6px;height:44px;cursor:pointer"></div>
+        </div>
+        <div class="inp-g"><label>Prize Type</label>
+          <select class="inp" id="wp-type">
+            <option value="nothing">❌ Better Luck (No Prize)</option>
+            <option value="cash">💰 Cash</option>
+            <option value="ticket">🎫 Tournament Ticket</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" style="flex:1" onclick="addWheelPrize()"><i class="fas fa-plus"></i> Add Prize</button>
+          <button class="btn btn-primary btn-sm" style="flex:1" onclick="saveWheelSettings()"><i class="fas fa-save"></i> Save Settings</button>
+        </div>
+      </div>
+      <div style="margin-top:12px"><div class="sec-title" style="margin-bottom:8px">Recent Spins (All Users)</div>
+      <div id="admin-spin-history"><div class="loading-wrap"><div class="spin"></div></div></div></div>
+    </div>
+
+    <!-- STORE ADMIN -->
+    <div class="asec" id="astore">
+      <div class="sec-title" style="margin-bottom:8px">🛍️ Add Store Item</div>
+      <div class="acard">
+        <div class="inp-g"><label>Item Type</label>
+          <select class="inp" id="si-type">
+            <option value="coupon">🎟️ Coupon</option>
+            <option value="ticket">🎫 Tournament Ticket</option>
+          </select>
+        </div>
+        <div class="inp-g"><label>Item Name</label><input class="inp" id="si-name" placeholder="e.g. 10% Off Coupon"></div>
+        <div class="inp-g"><label>Description</label><textarea class="inp" id="si-desc" placeholder="Item ki details..." style="height:60px;resize:none"></textarea></div>
+        <div class="inp-g"><label>Price (₹)</label><input class="inp" id="si-price" type="number" placeholder="50" min="1"></div>
+        <div class="inp-g"><label>Coupon Code (blank = auto-generate)</label><input class="inp" id="si-coupon-code" placeholder="SYNEX10 ya blank chhodo"></div>
+        <div class="inp-g"><label>Discount Value (₹ ya %)</label><input class="inp" id="si-discount" placeholder="e.g. ₹50 ya 10%"></div>
+        <div class="inp-g">
+          <label>Custom Icon (Square - Phone se upload karo)</label>
+          <img id="si-icon-preview" style="width:70px;height:70px;border-radius:10px;object-fit:cover;display:none;margin-bottom:6px" alt="">
+          <div onclick="document.getElementById('si-icon-file').click()" id="si-icon-area" style="border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;position:relative">
+            <i class="fas fa-image" style="font-size:1.4rem;color:var(--muted);display:block;margin-bottom:4px"></i>
+            <p style="font-size:.72rem;color:var(--muted);font-family:Rajdhani,sans-serif">📱 Phone se tap karke icon upload karo (Square)</p>
+            <input type="file" id="si-icon-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="handleIconUpload(this)">
+          </div>
+          <input type="hidden" id="si-icon-data">
+        </div>
+        <div class="inp-g">
+          <label>Custom Banner (1:1 Square - Phone se upload karo)</label>
+          <img id="si-banner-preview" style="width:100%;aspect-ratio:1/1;border-radius:10px;object-fit:cover;display:none;margin-bottom:6px" alt="">
+          <div onclick="document.getElementById('si-banner-file').click()" id="si-banner-area" style="border:2px dashed var(--border);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;position:relative">
+            <i class="fas fa-image" style="font-size:1.4rem;color:var(--muted);display:block;margin-bottom:4px"></i>
+            <p style="font-size:.72rem;color:var(--muted);font-family:Rajdhani,sans-serif">📱 Phone se tap karke banner upload karo</p>
+            <input type="file" id="si-banner-file" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer" onchange="handleBannerUpload(this)">
+          </div>
+          <input type="hidden" id="si-banner-data">
+        </div>
+        <button class="btn btn-primary" onclick="createStoreItem()"><i class="fas fa-plus"></i> Add to Store</button>
+      </div>
+      <div style="margin-top:12px"><div class="sec-title" style="margin-bottom:8px">All Store Items</div>
+      <div id="a-store-list"><div class="loading-wrap"><div class="spin"></div></div></div></div>
+    </div>
+
     <!-- SUPPORT SETTINGS ADMIN -->
     <div class="asec" id="asupport">
       <div class="sec-title" style="margin-bottom:6px">🎧 Support Links Settings</div>
@@ -1085,12 +1224,50 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
 <div class="bottom-nav">
   <div class="nav-item active" id="nav-home" onclick="navTo('home')"><i class="fas fa-home"></i><span>Home</span></div>
   <div class="nav-item" id="nav-matches" onclick="navTo('matches')"><i class="fas fa-trophy"></i><span>Matches</span></div>
-  <div class="nav-item" id="nav-wallet" onclick="navTo('wallet')"><i class="fas fa-wallet"></i><span>Wallet</span></div>
-  <div class="nav-item" id="nav-leaderboard" onclick="navTo('leaderboard')"><i class="fas fa-crown"></i><span>Ranks</span></div>
+  <div class="nav-item" id="nav-spin" onclick="navTo('spin')"><i class="fas fa-dharmachakra"></i><span>Spin</span></div>
+  <div class="nav-item" id="nav-store" onclick="navTo('store')"><i class="fas fa-store"></i><span>Store</span></div>
   <div class="nav-item" id="nav-profile" onclick="navTo('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
 </div>
 
 </div><!-- end app -->
+
+<!-- WINNER REDEEM MODAL -->
+<div class="modal-overlay" id="modal-winner-redeem">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title"><i class="fas fa-trophy" style="color:var(--gold)"></i> Give Winner Prize</div>
+    <div id="wr-user-info" style="background:var(--card2);border-radius:9px;padding:10px 13px;font-family:Rajdhani,sans-serif;margin-bottom:12px;color:var(--white);font-size:.85rem"></div>
+    <div class="inp-g"><label>Prize Type</label>
+      <select class="inp" id="wr-prize-type" onchange="updateWRForm()">
+        <option value="cash">💰 Cash Prize</option>
+        <option value="redeem">🎁 Redeem Code</option>
+      </select>
+    </div>
+    <div id="wr-cash-fields">
+      <div class="inp-g"><label>Prize Amount (₹)</label><input class="inp" id="wr-amount" type="number" placeholder="Enter prize money" min="1"></div>
+    </div>
+    <div id="wr-redeem-fields" style="display:none">
+      <div class="inp-g"><label>Redeem Code</label><input class="inp" id="wr-redeem-code" placeholder="e.g. SYNEX-WIN-ABCD1234"></div>
+      <div class="inp-g"><label>Code Description</label><input class="inp" id="wr-redeem-desc" placeholder="e.g. Free Fire 100 Diamonds"></div>
+    </div>
+    <div class="inp-g"><label>Tournament Name</label><input class="inp" id="wr-tournament-name" placeholder="Tournament name (for notification)"></div>
+    <input type="hidden" id="wr-uid">
+    <input type="hidden" id="wr-username">
+    <button class="btn btn-gold" onclick="giveWinnerPrize()" style="background:linear-gradient(135deg,#b8860b,var(--gold));color:#000"><i class="fas fa-gift"></i> Give Prize</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-winner-redeem')">Cancel</button>
+  </div>
+</div>
+
+<!-- BUY ITEM CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-buy-confirm">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title"><i class="fas fa-shopping-cart"></i> Confirm Purchase</div>
+    <div id="buy-confirm-content"></div>
+    <button class="btn btn-success" style="margin-top:10px" onclick="confirmBuyItem()"><i class="fas fa-check"></i> Confirm Buy</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="closeModal('modal-buy-confirm')">Cancel</button>
+  </div>
+</div>
 
 <!-- ══════════ MODALS ══════════ -->
 
@@ -1294,7 +1471,13 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
         </div>
         <div class="inp-g"><label>Start Time</label><input class="inp" id="et-starttime" type="datetime-local"></div>
       </div>
-      <div class="inp-g"><label>Rules (one per line)</label><textarea class="inp" id="et-rules" style="height:70px;resize:none"></textarea></div>
+      <div class="inp-g"><label>Entry Type</label>
+          <select class="inp" id="et-entry-type">
+            <option value="normal">💰 Normal (Cash)</option>
+            <option value="ticket">🎫 Ticket Only</option>
+          </select>
+        </div>
+        <div class="inp-g"><label>Rules (one per line)</label><textarea class="inp" id="et-rules" style="height:70px;resize:none"></textarea></div>
       <div style="background:rgba(21,101,192,.1);border:1px solid rgba(21,101,192,.3);border-radius:10px;padding:12px;margin-bottom:4px">
         <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.82rem;color:var(--blue3);margin-bottom:8px">🔐 Room Credentials</div>
         <div class="form-row">
@@ -1339,7 +1522,8 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
 </div>
 
 <!-- ══════════ FIREBASE ══════════ -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- early globals moved to main script -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
@@ -1351,8 +1535,10 @@ const firebaseConfig = {
   projectId: "k-upl-6a0db",
   storageBucket: "k-upl-6a0db.firebasestorage.app",
   messagingSenderId: "1024864441721",
-  appId: "1:1024864441721:web:7f9b2040c57bc3d5c44ba8"
+  appId: "1:1024864441721:web:7f9b2040c57bc3d5c44ba8",
+  measurementId: "G-L5VYH3QMR6"
 };
+
 /*
  ⚠️ FIREBASE RULES:
  {
@@ -1427,7 +1613,6 @@ function switchAuthTab(tab) {
   document.getElementById('form-login').style.display = tab==='login'?'block':'none';
   document.getElementById('form-signup').style.display = tab==='signup'?'block':'none';
 }
-
 function togglePass(id, btn) {
   const inp = document.getElementById(id);
   const show = inp.type === 'password';
@@ -3090,11 +3275,979 @@ let toastT;
 function showToast(msg,type='') {
   const el=document.getElementById('toast');
   const icons={success:'✓',error:'✗',warn:'⚠'};
-  el.innerHTML=`${icons[type]?`<span><span style="font-size:.85rem">${icons[type]}</span>`:''}${msg}`;
-  el.className='show'+(type?' '+type:'');
+  el.innerHTML=`${icons[type]?`<span style="font-weight:900">${icons[type]}</span> `:''}${msg}`;
+  el.className=`${type?type:''}`;
+  el.classList.add('show');
   clearTimeout(toastT);
-  toastT=setTimeout(()=>el.classList.remove('show'),2800);
+  toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
+
+// ── MODALS ──
+function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('show');}
+function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('show');}
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
+});
+
+// ── INIT FIREBASE (duplicate removed) ──
+
+// ─────────────────────────────────────────
+// NEW FEATURE FUNCTIONS
+// ─────────────────────────────────────────
+
+// ── AUTO DELETE: Room set hone ke 1hr baad tournament delete ──
+async function checkAutoDeleteTournaments() {
+  try {
+    const snap = await db.ref('tournaments').once('value');
+    if(!snap.exists()) return;
+    const now = Date.now();
+    snap.forEach(c => {
+      const t = c.val(), tid = c.key;
+      if(t.roomId && t.roomSetAt) {
+        const elapsed = now - t.roomSetAt;
+        if(elapsed >= 60*60*1000) { // 1 hour
+          db.ref('tournaments/'+tid).remove().catch(()=>{});
+        }
+      }
+    });
+  } catch(e){}
+}
+
+// ── USERNAME SYSTEM ──
+async function checkUsernameAvailable(username) {
+  if(!username || username.length < 3) return false;
+  const snap = await db.ref('usernames/'+username).once('value');
+  return !snap.exists();
+}
+
+// ── NAVTO UPDATE ──
+const _origNavTo = typeof navTo !== 'undefined' ? navTo : null;
+function navTo(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+page);
+  if(pg) pg.classList.add('active');
+  const nav=document.getElementById('nav-'+page);
+  if(nav) nav.classList.add('active');
+  const cont=document.getElementById('content');
+  if(cont) cont.scrollTop=0;
+  const np=document.getElementById('notif-panel');
+  if(np) np.classList.remove('show');
+  if(page==='home'){if(typeof loadTournaments==='function')loadTournaments();if(typeof loadLiveSection==='function')loadLiveSection();}
+  if(page==='matches'&&typeof loadMatches==='function') loadMatches();
+  if(page==='wallet'&&typeof loadWallet==='function') loadWallet();
+  if(page==='leaderboard'&&typeof loadLeaderboard==='function') loadLeaderboard();
+  if(page==='referral'&&typeof loadReferral==='function') loadReferral();
+  if(page==='profile'&&typeof loadProfile==='function') loadProfile();
+  if(page==='admin'&&typeof loadAdminData==='function') loadAdminData();
+  if(page==='support'&&typeof loadSupportLinks==='function') loadSupportLinks();
+  if(page==='spin') loadSpinWheel();
+  if(page==='store') loadStore();
+}
+
+// ── DEFAULT WHEEL PRIZES (admin override via Firebase) ──
+const DEFAULT_PRIZES=[
+  {label:'Better Luck!',value:0,prob:40,color:'#1b3c6e',type:'nothing'},
+  {label:'₹2 Cash',value:2,prob:20,color:'#1565c0',type:'cash'},
+  {label:'₹5 Cash',value:5,prob:15,color:'#7c4dff',type:'cash'},
+  {label:'₹10 Cash',value:10,prob:10,color:'#00e5ff',type:'cash'},
+  {label:'₹25 Cash',value:25,prob:7,color:'#00e676',type:'cash'},
+  {label:'₹50 Cash',value:50,prob:4,color:'#ffd700',type:'cash'},
+  {label:'🎫 Ticket',value:1,prob:3,color:'#f50057',type:'ticket'},
+  {label:'₹100!',value:100,prob:1,color:'#ff6d00',type:'cash'},
+];
+let spinPrizes=DEFAULT_PRIZES;
+let spinIsSpinning=false;
+
+// ── SPIN WHEEL DRAW ──
+function drawWheel(angle=0) {
+  const canvas=document.getElementById('spin-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,r=cx-6;
+  const total=spinPrizes.reduce((s,p)=>s+(p.prob||1),0);
+  ctx.clearRect(0,0,W,H);
+  let start=angle;
+  spinPrizes.forEach(p=>{
+    const slice=(p.prob/total)*2*Math.PI;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+slice);
+    ctx.fillStyle=p.color||'#1565c0';ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=2;ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+slice/2);
+    ctx.textAlign='right';ctx.fillStyle='#fff';
+    ctx.font=`bold ${spinPrizes.length>7?'9px':'11px'} "Exo 2",sans-serif`;
+    ctx.shadowBlur=5;ctx.shadowColor='rgba(0,0,0,.9)';
+    ctx.fillText(p.label,r-10,4);ctx.restore();
+    start+=slice;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,20,0,2*Math.PI);
+  ctx.fillStyle='#060d1b';ctx.fill();
+  ctx.strokeStyle='rgba(0,229,255,.6)';ctx.lineWidth=3;ctx.stroke();
+}
+
+async function loadSpinWheel() {
+  try {
+    const snap=await db.ref('settings/wheel').once('value');
+    if(snap.exists()){
+      const d=snap.val();
+      if(d.prizes&&d.prizes.length) spinPrizes=d.prizes;
+      const costEl=document.getElementById('spin-cost-display');
+      if(costEl) costEl.textContent='₹'+(d.cost||10)+' per spin';
+    }
+  } catch(e){}
+  drawWheel(0);
+  loadSpinHistory();
+}
+
+async function doSpin() {
+  if(spinIsSpinning){showToast('Wheel is spinning!','warn');return;}
+  const snap=await db.ref('settings/wheel').once('value');
+  const cost=(snap.exists()&&snap.val().cost)||10;
+  if((userData?.wallet||0)<cost){showToast('Balance kam hai! Add money karo.','error');return;}
+  spinIsSpinning=true;
+  const btn=document.getElementById('spin-btn');
+  if(btn){btn.disabled=true;btn.style.opacity='.5';}
+  const res=document.getElementById('spin-result-box');
+  if(res) res.style.display='none';
+
+  // Pick prize
+  const total=spinPrizes.reduce((s,p)=>s+(p.prob||1),0);
+  let rand=Math.random()*total,cum=0,chosen=0;
+  for(let i=0;i<spinPrizes.length;i++){cum+=spinPrizes[i].prob||1;if(rand<=cum){chosen=i;break;}}
+  const prize=spinPrizes[chosen];
+
+  // Target angle
+  let sliceStart=0;
+  for(let i=0;i<chosen;i++) sliceStart+=spinPrizes[i].prob||1;
+  const totalP=total;
+  const sliceCenter=sliceStart+(spinPrizes[chosen].prob||1)/2;
+  const targetFrac=sliceCenter/totalP;
+  const totalSpin=5*2*Math.PI+(2*Math.PI-targetFrac*2*Math.PI-Math.PI/2);
+  const duration=4500;
+  const startTime=performance.now();
+
+  function animate(now){
+    const elapsed=now-startTime;
+    const progress=Math.min(elapsed/duration,1);
+    const ease=1-Math.pow(1-progress,4);
+    drawWheel(totalSpin*ease);
+    if(progress<1){requestAnimationFrame(animate);}
+    else{
+      spinIsSpinning=false;
+      if(btn){btn.disabled=false;btn.style.opacity='1';}
+      awardSpinPrize(prize,cost);
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+async function awardSpinPrize(prize,cost) {
+  try {
+    const upd={};
+    let newBal=(userData.wallet||0)-cost;
+    upd['users/'+currentUser.uid+'/wallet']=newBal;
+    const txKey=db.ref().push().key;
+    upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Spin Cost',amount:-cost,date:Date.now(),status:'completed',desc:'Spin the Wheel'};
+
+    let winMsg='',winSubMsg='';
+    if(prize.type==='cash'&&prize.value>0){
+      newBal+=prize.value;
+      upd['users/'+currentUser.uid+'/wallet']=newBal;
+      const txWin=db.ref().push().key;
+      upd['users/'+currentUser.uid+'/transactions/'+txWin]={type:'Spin Win',amount:prize.value,date:Date.now(),status:'completed',desc:'Wheel prize: '+prize.label};
+      winMsg=prize.label;winSubMsg='₹'+prize.value+' aapke wallet mein add ho gaya! 🎉';
+    } else if(prize.type==='ticket'){
+      const newT=(userData.tickets||0)+1;
+      upd['users/'+currentUser.uid+'/tickets']=newT;
+      winMsg='🎫 Tournament Ticket!';winSubMsg='1 ticket aapke account mein add hua!';
+    } else {
+      winMsg='Better Luck Next Time!';winSubMsg='Koi prize nahi mila. Phir try karo!';
+    }
+
+    const histKey=db.ref().push().key;
+    upd['spinHistory/'+currentUser.uid+'/'+histKey]={label:prize.label,type:prize.type,value:prize.value,date:Date.now()};
+    await db.ref().update(upd);
+    userData.wallet=newBal;
+    if(prize.type==='ticket') userData.tickets=(userData.tickets||0)+1;
+
+    const res=document.getElementById('spin-result-box');
+    if(res){
+      res.style.display='block';res.style.animation='popIn .4s ease';
+      const emoji=document.getElementById('spin-win-emoji');
+      const prEl=document.getElementById('spin-result-prize');
+      const subEl=document.getElementById('spin-result-sub');
+      if(emoji) emoji.textContent=prize.type==='nothing'?'😢':prize.type==='ticket'?'🎫':'🎉';
+      if(prEl) prEl.textContent=winMsg;
+      if(subEl) subEl.textContent=winSubMsg;
+    }
+    loadSpinHistory();
+  } catch(e){console.error(e);showToast('Error crediting prize','error');}
+}
+
+async function loadSpinHistory() {
+  const el=document.getElementById('spin-history-list');
+  if(!el||!currentUser) return;
+  try {
+    const snap=await db.ref('spinHistory/'+currentUser.uid).limitToLast(10).once('value');
+    if(!snap.exists()){el.innerHTML='<div style="text-align:center;padding:16px;color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.82rem">No spins yet</div>';return;}
+    const items=[];
+    snap.forEach(c=>items.unshift({...c.val(),_k:c.key}));
+    el.innerHTML=items.map(s=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:Rajdhani,sans-serif">
+      <span style="font-size:.85rem;font-weight:700;color:var(--white)">${s.label}</span>
+      <span style="font-size:.65rem;color:var(--muted)">${timeAgo(s.date)}</span>
+    </div>`).join('');
+  } catch(e){}
+}
+
+// ── ADMIN WHEEL SETTINGS ──
+let adminWheelPrizes=[];
+async function loadAdminWheelSettings() {
+  try {
+    const snap=await db.ref('settings/wheel').once('value');
+    if(snap.exists()){
+      const d=snap.val();
+      adminWheelPrizes=d.prizes||[...DEFAULT_PRIZES];
+      const costEl=document.getElementById('wheel-cost-inp');
+      if(costEl) costEl.value=d.cost||10;
+    } else {
+      adminWheelPrizes=[...DEFAULT_PRIZES];
+    }
+    renderAdminWheelPrizes();
+    loadAdminSpinHistory();
+  } catch(e){}
+}
+
+function renderAdminWheelPrizes() {
+  const el=document.getElementById('wheel-prizes-list');
+  if(!el) return;
+  if(!adminWheelPrizes.length){el.innerHTML='<div style="color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.8rem;text-align:center;padding:8px">No prizes configured</div>';return;}
+  const totalProb=adminWheelPrizes.reduce((s,p)=>s+(p.prob||1),0);
+  el.innerHTML=adminWheelPrizes.map((p,i)=>`
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:10px 12px;display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <div style="width:24px;height:24px;border-radius:6px;background:${p.color||'#1565c0'};flex-shrink:0;border:2px solid rgba(255,255,255,.2)"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.85rem">${p.label}</div>
+        <div style="font-size:.65rem;color:var(--muted)">Prob: ${p.prob} / ${totalProb} = ${((p.prob/totalProb)*100).toFixed(1)}% chance · Type: ${p.type}</div>
+      </div>
+      <button onclick="removeWheelPrize(${i})" style="background:var(--danger);border:none;border-radius:6px;color:#fff;padding:4px 10px;font-size:.72rem;cursor:pointer;font-family:Rajdhani,sans-serif;font-weight:700">Del</button>
+    </div>`).join('');
+}
+
+function addWheelPrize() {
+  const label=document.getElementById('wp-label')?.value.trim();
+  const value=parseInt(document.getElementById('wp-value')?.value)||0;
+  const prob=parseInt(document.getElementById('wp-prob')?.value)||10;
+  const color=document.getElementById('wp-color')?.value||'#1565c0';
+  const type=document.getElementById('wp-type')?.value||'cash';
+  if(!label){showToast('Label required!','error');return;}
+  if(prob<1||prob>100){showToast('Probability 1-100 hona chahiye!','error');return;}
+  adminWheelPrizes.push({label,value,prob,color,type});
+  renderAdminWheelPrizes();
+  document.getElementById('wp-label').value='';
+  document.getElementById('wp-value').value='';
+  document.getElementById('wp-prob').value='';
+  showToast('Prize added! Save karna mat bhoolo.','success');
+}
+
+function removeWheelPrize(idx) {
+  adminWheelPrizes.splice(idx,1);
+  renderAdminWheelPrizes();
+}
+
+async function saveWheelSettings() {
+  const cost=parseInt(document.getElementById('wheel-cost-inp')?.value)||10;
+  if(!adminWheelPrizes.length){showToast('Kam se kam 1 prize add karo!','error');return;}
+  try {
+    await db.ref('settings/wheel').set({cost,prizes:adminWheelPrizes,updatedAt:Date.now()});
+    showToast('Spin wheel settings saved! ✓','success');
+    spinPrizes=[...adminWheelPrizes];
+  } catch(e){showToast('Error saving','error');}
+}
+
+async function loadAdminSpinHistory() {
+  const el=document.getElementById('admin-spin-history');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    // Load recent spins from all users - check spinHistory node
+    const snap=await db.ref('spinHistory').limitToLast(5).once('value');
+    if(!snap.exists()){el.innerHTML='<div style="color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.8rem;text-align:center;padding:12px">No spins yet</div>';return;}
+    let rows=[];
+    snap.forEach(userSnap=>{
+      const uid=userSnap.key;
+      userSnap.forEach(s=>{rows.push({...s.val(),uid,_k:s.key});});
+    });
+    rows.sort((a,b)=>b.date-a.date);
+    el.innerHTML=rows.slice(0,20).map(r=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem">${r.label}</div>
+      <div style="font-size:.65rem;color:var(--muted)">${r.uid.substring(0,8)}... · ${timeAgo(r.date)}</div></div>
+      <div style="font-family:Orbitron,monospace;font-size:.75rem;color:${r.type==='cash'?'var(--gold)':r.type==='ticket'?'var(--purple)':'var(--muted)'}">${r.type==='cash'?'+₹'+r.value:r.type==='ticket'?'+🎫':'—'}</div>
+    </div>`).join('');
+  } catch(e){el.innerHTML='<div style="color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.8rem;text-align:center;padding:12px">Failed to load</div>';}
+}
+
+// ── STORE FUNCTIONS ──
+let pendingBuyData=null;
+
+function switchStoreTab(tab,btn) {
+  document.querySelectorAll('.stab').forEach(b=>{b.style.background='transparent';b.style.color='var(--muted)';});
+  if(btn){btn.style.background='linear-gradient(135deg,#1b5e20,var(--success))';btn.style.color='#fff';}
+  ['coupons','tickets','mine'].forEach(t=>{
+    const el=document.getElementById('store-sec-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+  });
+  if(tab==='coupons') loadStoreCoupons();
+  if(tab==='tickets') loadStoreTickets();
+  if(tab==='mine') loadMyItems();
+}
+
+async function loadStore() {
+  switchStoreTab('coupons',document.querySelector('.stab'));
+}
+
+async function loadStoreCoupons() {
+  const el=document.getElementById('store-coupons-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').orderByChild('type').equalTo('coupon').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-tag"></i><p>Koi coupons nahi hain abhi.<br>Admin se maango!</p></div>';return;}
+    let html='';
+    snap.forEach(c=>{
+      const it=c.val(),sid=c.key;
+      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎟️';
+      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
+        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
+          ${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}
+          ${it.discount?`<div style="font-size:.68rem;color:var(--success);margin-top:2px">Discount: ${it.discount}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
+          <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#1b5e20,var(--success));border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+        </div>
+      </div>`;
+    });
+    el.innerHTML=html||'<div class="empty"><i class="fas fa-tag"></i><p>No coupons available</p></div>';
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';}
+}
+
+async function loadStoreTickets() {
+  const el=document.getElementById('store-tickets-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').orderByChild('type').equalTo('ticket').once('value');
+    let html='';
+    if(!snap.exists()){
+      // default ticket
+      html=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.4);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:56px;height:56px;border-radius:12px;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">🎫</div>
+        <div style="flex:1">
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">Tournament Ticket</div>
+          <div style="font-size:.68rem;color:var(--muted);margin-top:2px">Daily Ticket Tournament join karne ke liye</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹50</div>
+          <button onclick="buyDefaultTicket()" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+        </div>
+      </div>`;
+    } else {
+      snap.forEach(c=>{
+        const it=c.val(),sid=c.key;
+        const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎫';
+        html+=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.3);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
+          <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
+            ${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
+            <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+          </div>
+        </div>`;
+      });
+    }
+    el.innerHTML=html;
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+async function buyDefaultTicket(){
+  pendingBuyData={id:'default',name:'Tournament Ticket',price:50,type:'ticket'};
+  showBuyConfirm();
+}
+
+async function openBuyItem(sid) {
+  try {
+    const snap=await db.ref('storeItems/'+sid).once('value');
+    if(!snap.exists()){showToast('Item not found','error');return;}
+    pendingBuyData={id:sid,...snap.val()};
+    showBuyConfirm();
+  } catch(e){showToast('Error','error');}
+}
+
+function showBuyConfirm() {
+  if(!pendingBuyData) return;
+  const d=pendingBuyData;
+  const bal=userData?.wallet||0;
+  const iconHtml=d.banner?`<img src="${d.banner}" style="width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;margin-bottom:12px">`:(d.icon?`<div style="text-align:center;margin-bottom:12px"><img src="${d.icon}" style="width:80px;height:80px;border-radius:12px;object-fit:cover"></div>`:`<div style="text-align:center;font-size:3rem;margin-bottom:12px">${d.type==='ticket'?'🎫':'🎟️'}</div>`);
+  document.getElementById('buy-confirm-content').innerHTML=`
+    ${iconHtml}
+    <div style="font-family:Orbitron,monospace;font-size:.92rem;font-weight:700;text-align:center;margin-bottom:4px">${d.name}</div>
+    ${d.description?`<div style="font-family:Rajdhani,sans-serif;font-size:.78rem;color:var(--muted);text-align:center;margin-bottom:10px">${d.description}</div>`:''}
+    <div style="background:rgba(21,101,192,.1);border:1px solid rgba(21,101,192,.3);border-radius:11px;padding:14px;text-align:center;margin:12px 0">
+      <div style="font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--muted)">Price</div>
+      <div style="font-family:Orbitron,monospace;font-size:1.5rem;font-weight:900;color:var(--cyan)">₹${d.price}</div>
+      <div style="display:flex;justify-content:space-between;font-family:Rajdhani,sans-serif;font-size:.8rem;margin-top:6px">
+        <span style="color:var(--muted)">Balance: <b style="color:var(--gold)">₹${bal}</b></span>
+        <span>After: <b style="color:${bal-d.price<0?'var(--danger)':'var(--warn)'}">₹${bal-d.price}</b></span>
+      </div>
+    </div>`;
+  openModal('modal-buy-confirm');
+}
+
+async function confirmBuyItem() {
+  if(!pendingBuyData){closeModal('modal-buy-confirm');return;}
+  const d=pendingBuyData;
+  if((userData?.wallet||0)<d.price){showToast('Balance kam hai!','error');closeModal('modal-buy-confirm');return;}
+  try {
+    const newBal=(userData.wallet||0)-d.price;
+    const upd={};
+    upd['users/'+currentUser.uid+'/wallet']=newBal;
+    const txKey=db.ref().push().key;
+    upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Store Purchase',amount:-d.price,date:Date.now(),status:'completed',desc:'Bought: '+d.name};
+    if(d.type==='ticket'){
+      upd['users/'+currentUser.uid+'/tickets']=(userData.tickets||0)+1;
+    }
+    const pKey=db.ref().push().key;
+    let code='';
+    if(d.type==='coupon'){
+      code=d.couponCode||('SYN'+Math.random().toString(36).substr(2,8).toUpperCase());
+    }
+    upd['users/'+currentUser.uid+'/purchases/'+pKey]={itemId:d.id,name:d.name,type:d.type,price:d.price,couponCode:code,purchasedAt:Date.now()};
+    await db.ref().update(upd);
+    userData.wallet=newBal;
+    if(d.type==='ticket') userData.tickets=(userData.tickets||0)+1;
+    closeModal('modal-buy-confirm');
+    pendingBuyData=null;
+    if(d.type==='ticket') showToast('🎫 Ticket mila! Ab ticket tournament join karo.','success');
+    else if(code) showToast('🎟️ Coupon: '+code,'success');
+    else showToast('Purchase complete! ✓','success');
+  } catch(e){showToast('Purchase failed','error');}
+}
+
+async function loadMyItems() {
+  const el=document.getElementById('my-store-items');
+  if(!el||!currentUser) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('users/'+currentUser.uid+'/purchases').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><p>Koi purchases nahi hain.</p></div>';return;}
+    const items=Object.entries(snap.val()).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.purchasedAt-a.purchasedAt);
+    el.innerHTML=items.map(it=>`<div style="background:linear-gradient(135deg,rgba(0,230,118,.05),var(--card));border:1px solid rgba(0,230,118,.2);border-radius:12px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:1.3rem">${it.type==='ticket'?'🎫':'🎟️'}</span>
+        <div>
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
+          <div style="font-size:.65rem;color:var(--muted)">${new Date(it.purchasedAt).toLocaleDateString('en-IN')} · ₹${it.price}</div>
+        </div>
+      </div>
+      ${it.couponCode?`<div style="font-family:Orbitron,monospace;font-size:.88rem;color:var(--success);letter-spacing:3px;cursor:pointer" onclick="copyText('${it.couponCode}','Coupon Code')">${it.couponCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div>`:''}
+      ${it.type==='ticket'?'<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,77,255,.15);border:1px solid rgba(124,77,255,.4);border-radius:10px;padding:3px 10px;font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--purple);font-weight:700"><i class="fas fa-ticket-alt"></i>&nbsp;Tournament Ticket</div>':''}
+      ${it.redeemCode?`<div style="margin-top:6px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--muted);font-family:Rajdhani,sans-serif">🏆 Winner Redeem Code</div><div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);cursor:pointer" onclick="copyText('${it.redeemCode}','Redeem Code')">${it.redeemCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div><div style="font-size:.65rem;color:var(--muted)">${it.redeemDesc||''}</div></div>`:''}
+    </div>`).join('');
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+// ── ADMIN STORE FUNCTIONS ──
+function handleIconUpload(input) {
+  const file=input.files[0];
+  if(!file) return;
+  if(file.size>2*1024*1024){showToast('Max 2MB!','warn');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    const prev=document.getElementById('si-icon-preview');
+    const dataEl=document.getElementById('si-icon-data');
+    const area=document.getElementById('si-icon-area');
+    if(prev){prev.src=data;prev.style.display='block';}
+    if(dataEl) dataEl.value=data;
+    if(area) area.style.borderColor='var(--success)';
+    showToast('Icon uploaded! ✓','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleBannerUpload(input) {
+  const file=input.files[0];
+  if(!file) return;
+  if(file.size>3*1024*1024){showToast('Max 3MB!','warn');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    const prev=document.getElementById('si-banner-preview');
+    const dataEl=document.getElementById('si-banner-data');
+    const area=document.getElementById('si-banner-area');
+    if(prev){prev.src=data;prev.style.display='block';}
+    if(dataEl) dataEl.value=data;
+    if(area) area.style.borderColor='var(--success)';
+    showToast('Banner uploaded! ✓','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function createStoreItem() {
+  const type=document.getElementById('si-type')?.value||'coupon';
+  const name=document.getElementById('si-name')?.value.trim();
+  const desc=document.getElementById('si-desc')?.value.trim();
+  const price=parseInt(document.getElementById('si-price')?.value)||0;
+  const couponCode=document.getElementById('si-coupon-code')?.value.trim();
+  const discount=document.getElementById('si-discount')?.value.trim();
+  const icon=document.getElementById('si-icon-data')?.value||'';
+  const banner=document.getElementById('si-banner-data')?.value||'';
+  if(!name||!price){showToast('Name aur price required!','error');return;}
+  try {
+    const key=db.ref('storeItems').push().key;
+    await db.ref('storeItems/'+key).set({type,name,description:desc,price,couponCode:couponCode||'',discount:discount||'',icon,banner,createdAt:Date.now()});
+    // Reset form
+    ['si-name','si-desc','si-price','si-coupon-code','si-discount','si-icon-data','si-banner-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const ip=document.getElementById('si-icon-preview');if(ip)ip.style.display='none';
+    const bp=document.getElementById('si-banner-preview');if(bp)bp.style.display='none';
+    const ia=document.getElementById('si-icon-area');if(ia)ia.style.borderColor='var(--border)';
+    const ba=document.getElementById('si-banner-area');if(ba)ba.style.borderColor='var(--border)';
+    showToast('Store item added! ✓','success');
+    loadAStoreItems();
+  } catch(e){showToast('Error adding item','error');}
+}
+
+async function loadAStoreItems() {
+  const el=document.getElementById('a-store-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-store"></i><p>No items yet</p></div>';return;}
+    let html='';
+    snap.forEach(c=>{
+      const it=c.val(),sid=c.key;
+      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:(it.type==='ticket'?'🎫':'🎟️');
+      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:10px">
+        <div style="width:50px;height:50px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${iconHtml}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.85rem">${it.name}</div>
+          <div style="font-size:.65rem;color:var(--muted)">₹${it.price} · ${it.type} ${it.couponCode?'· Code: '+it.couponCode:''}</div>
+        </div>
+        <button onclick="deleteStoreItem('${sid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 12px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
+      </div>`;
+    });
+    el.innerHTML=html;
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+async function deleteStoreItem(sid) {
+  if(!confirm('Delete this store item?')) return;
+  try{await db.ref('storeItems/'+sid).remove();showToast('Item deleted','warn');loadAStoreItems();}
+  catch(e){showToast('Error','error');}
+}
+
+// ── USERNAME SYSTEM ──
+let usernameCheckTimer=null;
+document.addEventListener('DOMContentLoaded',()=>{
+  const unameInput=document.getElementById('su-username');
+  if(unameInput){
+    unameInput.addEventListener('input',()=>{
+      clearTimeout(usernameCheckTimer);
+      const val=unameInput.value;
+      const msg=document.getElementById('uname-check');
+      if(!val||val.length<3){if(msg)msg.innerHTML='<span style="color:var(--muted)">Min 3 characters</span>';return;}
+      if(msg) msg.innerHTML='<span style="color:var(--muted)">Checking...</span>';
+      usernameCheckTimer=setTimeout(async()=>{
+        try{
+          const snap=await db.ref('usernames/'+val).once('value');
+          if(snap.exists()){if(msg)msg.innerHTML='<span style="color:var(--danger)">✗ Username already taken!</span>';}
+          else{if(msg)msg.innerHTML='<span style="color:var(--success)">✓ Available!</span>';}
+        }catch(e){}
+      },500);
+    });
+  }
+});
+
+// Override doSignup to include username
+const _baseDoSignup=typeof doSignup==='function'?doSignup:null;
+// ── OVERRIDE showApp to load tickets ──
+const _origShowApp=typeof showApp==='function'?showApp:null;
+function showApp() {
+  document.getElementById('page-auth').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('blocked-screen').classList.remove('show');
+  updateSideMenu();
+  loadTournaments();
+  loadLiveSection();
+  loadNotifications();
+  updateHeroBanner();
+  checkAutoDeleteTournaments();
+  // Load tickets count
+  if(currentUser) {
+    db.ref('users/'+currentUser.uid+'/tickets').on('value',s=>{
+      const t=s.val()||0;
+      userData.tickets=t;
+      const ht=document.getElementById('hero-tickets');
+      if(ht) ht.textContent='🎫'+t;
+    });
+  }
+}
+
+// ── WINNER REDEEM CODE (Admin give to winner) ──
+function openWinnerRedeem(uid,name,tournamentName) {
+  document.getElementById('wr-uid').value=uid;
+  document.getElementById('wr-username').value=name;
+  document.getElementById('wr-tournament-name').value=tournamentName||'';
+  document.getElementById('wr-user-info').innerHTML=`<i class="fas fa-user" style="color:var(--cyan)"></i> <b>${name}</b><br><span style="color:var(--muted);font-size:.78rem">UID: ${uid}</span>`;
+  updateWRForm();
+  openModal('modal-winner-redeem');
+}
+
+function updateWRForm() {
+  const type=document.getElementById('wr-prize-type')?.value;
+  const cashFields=document.getElementById('wr-cash-fields');
+  const redeemFields=document.getElementById('wr-redeem-fields');
+  if(cashFields) cashFields.style.display=type==='cash'?'block':'none';
+  if(redeemFields) redeemFields.style.display=type==='redeem'?'block':'none';
+}
+
+async function giveWinnerPrize() {
+  const uid=document.getElementById('wr-uid')?.value;
+  const userName=document.getElementById('wr-username')?.value;
+  const type=document.getElementById('wr-prize-type')?.value;
+  const tName=document.getElementById('wr-tournament-name')?.value||'Tournament';
+  if(!uid){showToast('Error: No user selected','error');return;}
+  try {
+    if(type==='cash'){
+      const amount=parseInt(document.getElementById('wr-amount')?.value)||0;
+      if(!amount||amount<1){showToast('Enter valid prize amount','error');return;}
+      const cur=(await db.ref('users/'+uid+'/wallet').once('value')).val()||0;
+      const newBal=cur+amount;
+      const txKey=db.ref().push().key;
+      const upd={};
+      upd['users/'+uid+'/wallet']=newBal;
+      upd['users/'+uid+'/transactions/'+txKey]={type:'Match Prize',amount,date:Date.now(),status:'completed',desc:'🏆 Winner prize: '+tName};
+      const nk=db.ref().push().key;
+      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Prize!',body:'₹'+amount+' added for winning '+tName+'! Congrats!',type:'deposit',date:Date.now(),read:false};
+      await db.ref().update(upd);
+      closeModal('modal-winner-redeem');
+      showToast('₹'+amount+' prize given to winner! ✓','success');
+    } else {
+      const code=document.getElementById('wr-redeem-code')?.value.trim();
+      const desc=document.getElementById('wr-redeem-desc')?.value.trim();
+      if(!code){showToast('Enter redeem code!','error');return;}
+      const pKey=db.ref().push().key;
+      const nk=db.ref().push().key;
+      const upd={};
+      upd['users/'+uid+'/purchases/'+pKey]={itemId:'winner-prize',name:'Winner Prize: '+tName,type:'redeem',price:0,redeemCode:code,redeemDesc:desc||'',purchasedAt:Date.now()};
+      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Redeem Code!',body:'Aapne '+tName+' jeeta! Redeem code: '+code,type:'deposit',date:Date.now(),read:false};
+      await db.ref().update(upd);
+      closeModal('modal-winner-redeem');
+      showToast('Redeem code sent to winner! ✓','success');
+    }
+    loadAUsers();
+  } catch(e){showToast('Error giving prize','error');}
+}
+
+// ── OVERRIDE loadATournaments for better display + fix delete ──
+async function loadATournaments() {
+  const el=document.getElementById('a-t-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('tournaments').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments yet.<br>Create one above!</p></div>';return;}
+    let html='',count=0;
+    snap.forEach(c=>{
+      const t=c.val(),tid=c.key;count++;
+      const isTicket=t.entryType==='ticket';
+      const feeDisp=isTicket?'🎫 Ticket':(t.entryFee==0?'FREE':'₹'+t.entryFee);
+      const roomSetInfo=t.roomSetAt?`<div style="font-size:.62rem;color:var(--warn);margin-top:2px">⚠️ Auto-delete: ${Math.max(0,Math.ceil((60*60*1000-(Date.now()-t.roomSetAt))/60000))}min remaining</div>`:'';
+      html+=`<div style="background:var(--card);border:1px solid ${t.featured?'var(--gold)':isTicket?'var(--purple)':'var(--border)'};border-radius:11px;overflow:hidden;margin-bottom:9px">
+        ${t.thumbnail?`<img src="${t.thumbnail}" style="width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--card2)" onerror="this.style.display='none'">`:''}
+        <div style="padding:11px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Orbitron,monospace;font-size:.82rem;font-weight:700">${t.name}${t.featured?' ⭐':''}${isTicket?' 🎫':''}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:3px;font-family:Rajdhani,sans-serif;line-height:1.5">${t.map||'Bermuda'} · ${(t.mode||'solo').toUpperCase()} · ${feeDisp}<br>Prize: ${t.prizePool||'—'} · Players: ${t.registered||0}/${t.maxPlayers||32}${t.roomId?'<br><span style="color:var(--cyan)">🔐 Room set</span>':''}</div>
+            ${roomSetInfo}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+            <button onclick="openEditT('${tid}')" style="background:var(--blue1);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-edit"></i></button>
+            <button onclick="openSetRoomModal('${tid}','${(t.name||'').replace(/'/g,"\\'")}')" style="background:var(--warn);border:none;border-radius:7px;color:#000;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-key"></i></button>
+            <button onclick="deleteT('${tid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        ${t.players?`<div style="padding:0 11px 11px"><div style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;margin-bottom:6px">JOINED PLAYERS (${t.registered||0})</div>${Object.values(t.players).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem">${p.name||'?'} ${p.username?'<span style="color:var(--muted)">@'+p.username+'</span>':''}</div></div><button onclick="openWinnerRedeem('${Object.entries(t.players||{}).find(([k,v])=>v.name===p.name)?.[0]||''}','${(p.name||'').replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}') style="background:var(--gold);border:none;border-radius:6px;color:#000;padding:3px 8px;font-size:.65rem;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer">🏆 Give Prize</button></div>`).join('')}</div>`:''}
+      </div>`;
+    });
+    el.innerHTML=html||(count===0?'<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments</p></div>':'');
+  } catch(e){console.error(e);el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load. Check Firebase.</p></div>';}
+}
+
+// Fix deleteT
+async function deleteT(tid) {
+  if(!confirm('Delete this tournament?')) return;
+  try{
+    await db.ref('tournaments/'+tid).remove();
+    showToast('Tournament deleted!','warn');
+    loadATournaments();
+  }catch(e){console.error('Delete error:',e);showToast('Delete failed! Check Firebase Rules','error');}
+}
+
+// Quick room set modal
+function openSetRoomModal(tid,tname) {
+  const roomId=prompt('Enter Room ID for "'+tname+'":');
+  if(!roomId) return;
+  const roomPwd=prompt('Enter Room Password:');
+  if(!roomPwd) return;
+  db.ref('tournaments/'+tid).update({roomId,roomPassword:roomPwd,roomSetAt:Date.now()})
+    .then(()=>{
+      showToast('Room credentials set! Auto-delete in 1hr.','success');
+      // Notify all joined players
+      sendTournamentNotif(tid,tname,'Room credentials set! Check My Matches now. 🔐');
+      loadATournaments();
+    })
+    .catch(()=>showToast('Error setting room','error'));
+}
+
+// ── createTournament override with ticket support ──
+async function createTournament() {
+  const name=document.getElementById('t-name')?.value.trim();
+  const fee=parseInt(document.getElementById('t-fee')?.value)||0;
+  const prize=document.getElementById('t-prize')?.value.trim();
+  const map=document.getElementById('t-map')?.value.trim();
+  const max=parseInt(document.getElementById('t-max')?.value)||32;
+  const mode=document.getElementById('t-mode')?.value||'solo';
+  const startTimeVal=document.getElementById('t-starttime')?.value;
+  const rulesRaw=document.getElementById('t-rules')?.value.trim();
+  const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
+  const startTime=startTimeVal?new Date(startTimeVal).getTime():null;
+  const featured=document.getElementById('t-featured')?.value==='1';
+  const entryType=document.getElementById('t-entry-type')?.value||'normal';
+  const thumb=getThumbValue('t');
+  if(!name||!prize||!map){showToast('Name, Prize & Map required!','error');return;}
+  try {
+    const key=db.ref('tournaments').push().key;
+    await db.ref('tournaments/'+key).set({name,entryFee:entryType==='ticket'?0:fee,prizePool:prize,map,maxPlayers:max,registered:0,thumbnail:thumb,mode,startTime,rules,featured,entryType,createdAt:Date.now()});
+    ['t-name','t-fee','t-prize','t-map','t-max','t-thumb-url','t-thumb-data','t-rules'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const prev=document.getElementById('t-img-preview');if(prev)prev.classList.remove('show');
+    const area=document.getElementById('t-img-area');
+    if(area){area.classList.remove('has-img');const p=area.querySelector('p');if(p)p.innerHTML='Tap to upload image<br><span style="font-size:.65rem;opacity:.6">PNG, JPG, WEBP</span>';const ic=area.querySelector('i');if(ic)ic.style.color='';}
+    sendGlobalNotif('🏆 New Tournament!',`"${name}" is open! Entry: ${entryType==='ticket'?'🎫 Ticket':fee===0?'FREE':'₹'+fee}`,'tournament');
+    showToast('Tournament created! ✓','success');
+    loadATournaments();
+  } catch(e){console.error(e);showToast('Error creating','error');}
+}
+
+// ── saveTEdit override with entry type ──
+const _origSaveTEdit=typeof saveTEdit==='function'?saveTEdit:null;
+async function saveTEdit() {
+  const tid=document.getElementById('et-id')?.value;
+  const thumb=getThumbValue('et');
+  const startTimeVal=document.getElementById('et-starttime')?.value;
+  const rulesRaw=document.getElementById('et-rules')?.value.trim();
+  const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
+  const roomId=document.getElementById('et-roomid')?.value.trim();
+  const roomPassword=document.getElementById('et-roompwd')?.value.trim();
+  const entryType=document.getElementById('et-entry-type')?.value||'normal';
+  const upd={
+    name:document.getElementById('et-name')?.value.trim(),
+    entryFee:parseInt(document.getElementById('et-fee')?.value)||0,
+    prizePool:document.getElementById('et-prize')?.value.trim(),
+    map:document.getElementById('et-map')?.value.trim(),
+    maxPlayers:parseInt(document.getElementById('et-max')?.value)||32,
+    mode:document.getElementById('et-mode')?.value||'solo',
+    rules,thumbnail:thumb,
+    startTime:startTimeVal?new Date(startTimeVal).getTime():null,
+    roomId,roomPassword,entryType,
+    featured:document.getElementById('et-featured')?.value==='1'
+  };
+  if(roomId&&roomPassword&&!upd.roomSetAt) upd.roomSetAt=Date.now();
+  try {
+    await db.ref('tournaments/'+tid).update(upd);
+    if(roomId&&roomPassword) sendTournamentNotif(tid,upd.name,'Room credentials set! Check My Matches. 🔐');
+    closeModal('modal-edit-t');
+    showToast('Updated! ✓','success');
+    loadATournaments();
+  } catch(e){showToast('Error','error');}
+}
+
+// ── loadAdminData override to include wheel/store ──
+const _origLoadAdminData=typeof loadAdminData==='function'?loadAdminData:null;
+async function loadAdminData() {
+  const isAdmin=currentUser?.uid===ADMIN_UID||userData?.isAdmin;
+  if(!isAdmin){showToast('Unauthorized','error');navTo('home');return;}
+  loadAUsers();loadADeposits();loadAWithdrawals();loadATournaments();loadALive();
+  loadAdminUPISettings();loadAdminSupportSettings();
+  loadAdminWheelSettings();loadAStoreItems();
+}
+
+// ── updateHeroBanner override ──
+const _origUpdateHero=typeof updateHeroBanner==='function'?updateHeroBanner:null;
+function updateHeroBanner() {
+  if(!userData) return;
+  const name=(userData.name||'Player').split(' ')[0];
+  const hn=document.getElementById('hero-name');if(hn)hn.textContent=name;
+  const hb=document.getElementById('hero-bal');if(hb)hb.textContent='₹'+(userData.wallet||0);
+  const matchCount=userData.registeredMatches?Object.keys(userData.registeredMatches).length:0;
+  const hm=document.getElementById('hero-matches');if(hm)hm.textContent=matchCount;
+  const hw=document.getElementById('hero-wins');if(hw)hw.textContent=(userData.stats?.wins||0);
+  const ht=document.getElementById('hero-tickets');if(ht)ht.textContent='🎫'+(userData.tickets||0);
+}
+
+// ── loadProfile override to show username ──
+const _origLoadProfile=typeof loadProfile==='function'?loadProfile:null;
+function loadProfile() {
+  if(!userData||!currentUser) return;
+  const init=(userData.name||'P')[0].toUpperCase();
+  const pa=document.getElementById('prof-av');if(pa)pa.textContent=init;
+  const pn=document.getElementById('prof-name');if(pn)pn.textContent=userData.name||'';
+  const pe=document.getElementById('prof-email');if(pe)pe.textContent=currentUser.email||'';
+  const puid=document.getElementById('prof-uid');if(puid)puid.textContent=currentUser.uid;
+  const pff=document.getElementById('pf-ffuid');if(pff)pff.value=userData.uid||'';
+  const pig=document.getElementById('pf-ign');if(pig)pig.value=userData.ign||'';
+  const pdn=document.getElementById('pf-dname');if(pdn)pdn.value=userData.name||'';
+  const psq=document.getElementById('pf-squad');if(psq)psq.value=userData.squad||'';
+  const {level}=calcLevel(userData.xp||0);
+  const plb=document.getElementById('prof-level-badge');if(plb)plb.textContent='LV'+level;
+  const psd=document.getElementById('prof-squad-disp');if(psd)psd.textContent=userData.squad?'👥 '+userData.squad:'';
+  const pud=document.getElementById('prof-username-disp');if(pud)pud.textContent=userData.username?'@'+userData.username:'';
+  loadProfileStats();
+}
+
+// ── joinTournament override with ticket support ──
+const _origJoinT=typeof joinTournament==='function'?joinTournament:null;
+async function joinTournament(tid) {
+  if(!currentUser||!userData) return;
+  try {
+    const snap=await db.ref('tournaments/'+tid).once('value');
+    if(!snap.exists()){showToast('Not found','error');return;}
+    const t=snap.val();
+    const isTicket=t.entryType==='ticket';
+    const fee=t.entryFee||0;
+    if(isTicket&&(userData.tickets||0)<=0){showToast('No tickets! Store se kharido.','warn');navTo('store');return;}
+    if(!isTicket&&fee>(userData.wallet||0)){showToast('Insufficient balance!','warn');openAddMoney();return;}
+    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament full!','error');return;}
+    const myIds=getMyMatchIds();if(myIds.includes(tid)){showToast('Already joined!','warn');return;}
+    const newBal=(userData.wallet||0)-fee;
+    const newTickets=isTicket?(userData.tickets||0)-1:userData.tickets||0;
+    const mKey=db.ref().push().key,txKey=db.ref().push().key;
+    const matchEntry={id:tid,name:t.name,status:'upcoming',prizePool:t.prizePool,entryFee:isTicket?'ticket':fee,map:t.map,mode:t.mode||'solo',joinedAt:Date.now()};
+    const tx={type:isTicket?'Ticket Used':'Tournament Join',amount:isTicket?0:-fee,date:Date.now(),status:'completed',desc:t.name};
+    const upd={};
+    if(isTicket) upd['users/'+currentUser.uid+'/tickets']=newTickets;
+    else upd['users/'+currentUser.uid+'/wallet']=newBal;
+    upd['users/'+currentUser.uid+'/registeredMatches/'+mKey]=matchEntry;
+    upd['users/'+currentUser.uid+'/transactions/'+txKey]=tx;
+    upd['tournaments/'+tid+'/registered']=(t.registered||0)+1;
+    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||'Player',username:userData.username||'',ign:userData.ign||'',squad:userData.squad||'',joinedAt:Date.now()};
+    const newXP=(userData.xp||0)+XP_PER_MATCH;
+    upd['users/'+currentUser.uid+'/xp']=newXP;
+    await db.ref().update(upd);
+    if(isTicket) userData.tickets=newTickets; else userData.wallet=newBal;
+    userData.xp=newXP;
+    if(!userData.registeredMatches) userData.registeredMatches={};
+    userData.registeredMatches[mKey]=matchEntry;
+    showToast('Joined! 🎮 +'+XP_PER_MATCH+' XP','success');
+    loadTournaments();updateHeroBanner();
+  } catch(e){console.error(e);showToast('Error joining','error');}
+}
+
+// ── buildTCard override: show ticket tournaments ──
+function buildTCard(t,tid,joined,full){
+  const isTicket=t.entryType==='ticket';
+  const thumb=t.thumbnail?`<img class="t-thumb" src="${t.thumbnail}" alt="${t.name}" onerror="this.parentElement.innerHTML='<div class=t-thumb-placeholder><i class=fas\\ fa-gamepad></i></div>'">`:`<div class="t-thumb-placeholder"><i class="fas fa-gamepad"></i></div>`;
+  let btn='';
+  if(joined) btn=`<button class="join-btn joined"><i class="fas fa-check"></i> Joined</button>`;
+  else if(full) btn=`<button class="join-btn full"><i class="fas fa-lock"></i> Full</button>`;
+  else btn=`<button class="join-btn" onclick="openJoinConfirm('${tid}')" style="${isTicket?'background:linear-gradient(135deg,#4a148c,#7c4dff)':''}"><i class="fas ${isTicket?'fa-ticket-alt':'fa-gamepad'}"></i> ${isTicket?'Use Ticket':'Join Now'}</button>`;
+  const fee=isTicket?`<span class="t-fee" style="background:rgba(124,77,255,.1);border-color:var(--purple);color:var(--purple)">🎫 Ticket</span>`:t.entryFee==0?`<span class="t-fee free"><i class="fas fa-gift"></i> FREE</span>`:`<span class="t-fee">₹${t.entryFee}</span>`;
+  const modeLabels={solo:'👤 Solo',duo:'👥 Duo',squad:'⚔️ Squad'};
+  const modeLbl=modeLabels[t.mode||'solo']||'👤 Solo';
+  const pct=Math.min(100,((t.registered||0)/(t.maxPlayers||32))*100);
+  const isFull=(t.registered||0)>=(t.maxPlayers||32);
+  let cdHtml='';
+  if(t.startTime){
+    const id='cd-'+tid;
+    if(t.startTime>Date.now()){cdHtml=`<div class="t-countdown" id="${id}"><i class="fas fa-clock"></i> <span>—</span></div>`;setTimeout(()=>startCountdown(id,t.startTime),80);}
+    else cdHtml=`<div class="t-countdown live-now"><i class="fas fa-circle"></i> LIVE NOW</div>`;
+  }
+  return `<div class="t-card fiu${t.featured?' featured':''}">
+    <div class="t-thumb-wrap">${thumb}
+      <div class="t-status-bar"><div style="display:flex;gap:5px;align-items:center">
+        ${joined?'<span class="badge badge-new">✓ Joined</span>':''}
+        ${isFull&&!joined?'<span class="badge" style="background:rgba(255,68,68,.2);border:1px solid var(--danger);color:var(--danger)">Full</span>':''}
+        ${isTicket?'<span class="badge" style="background:rgba(124,77,255,.2);border:1px solid var(--purple);color:var(--purple)">🎫 Ticket Only</span>':''}
+      </div></div>
+    </div>
+    <div class="t-body">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+        <div class="t-name">${t.name}</div>
+        <button onclick="openTDetail('${tid}')" style="background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:2px 4px;flex-shrink:0;margin-top:1px"><i class="fas fa-info-circle"></i></button>
+      </div>
+      <div class="t-tags">
+        <div class="t-tag"><i class="fas fa-map-marker-alt"></i> ${t.map||'Bermuda'}</div>
+        <div class="t-tag"><i class="fas fa-users"></i> ${t.registered||0}/${t.maxPlayers||32}</div>
+        <div class="t-tag">${modeLbl}</div>
+      </div>
+      ${cdHtml}
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-label"><span>Players</span><span>${t.registered||0}/${t.maxPlayers||32}</span></div>
+        <div class="progress-bar"><div class="progress-bar-fill${isFull?' full':''}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="t-footer" style="margin-top:10px">
+        <div class="t-prize"><i class="fas fa-trophy"></i><span>${t.prizePool}</span></div>
+        <div style="display:flex;align-items:center;gap:7px">${fee}${btn}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── filterTournaments override: add ticket filter ──
+function filterTournaments(type,btn) {
+  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  let filtered=allTournamentsCache;
+  if(type==='free') filtered=allTournamentsCache.filter(t=>!t.entryFee||t.entryFee===0);
+  else if(type==='ticket') filtered=allTournamentsCache.filter(t=>t.entryType==='ticket');
+  else if(type!=='all') filtered=allTournamentsCache.filter(t=>(t.mode||'solo')===type);
+  renderTournaments(filtered);
+}
+
+// ── Add Ticket filter tab (inject into DOM) ──
+document.addEventListener('DOMContentLoaded',()=>{
+  const ft=document.getElementById('filter-tabs');
+  if(ft&&!document.querySelector('[onclick*="ticket"]')){
+    const ticketTab=document.createElement('div');
+    ticketTab.className='filter-tab';
+    ticketTab.setAttribute('onclick',"filterTournaments('ticket',this)");
+    ticketTab.textContent='🎫 Ticket';
+    ft.appendChild(ticketTab);
+  }
+});
+
+// ── Spin Wheel styles ──
+const spinStyles=document.createElement('style');
+spinStyles.textContent=`
+.stab{transition:all .2s!important;}
+.store-sec{display:none}
+@keyframes popIn{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
+`;
+document.head.appendChild(spinStyles);
+
+// ── INIT ──
+// ── GLOBAL FUNCTION EXPORTS ──
+window.switchAuthTab = switchAuthTab;
+window.togglePass = togglePass;
+window.doLogin = doLogin;
+window.doSignup = doSignup;
+window.doGoogleLogin = doGoogleLogin;
 
 initFirebase();
 </script>
