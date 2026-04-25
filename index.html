@@ -6,6 +6,8 @@
 <title>Synex Tournament – FF MAX</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- SYNEX PAY WIDGET -->
+<script src="https://our-payment-gateway.onrender.com/widget.js"></script>
 <style>
 :root{
   --bg:#060d1b;--bg2:#081528;--card:#0b1f3d;--card2:#0e2650;
@@ -514,6 +516,12 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
 .instant-step-num{width:20px;height:20px;border-radius:50%;background:var(--blue1);color:#fff;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Orbitron',monospace;margin-top:1px}
 .dep-custom-row{display:flex;gap:8px;margin-bottom:14px}
 .dep-custom-row .inp{flex:1}
+.pay-btn-row{display:flex;gap:10px;margin:12px 0}
+.pay-upi-btn{flex:1;padding:14px 10px;background:linear-gradient(135deg,#0d47a1,#1565c0);border:none;border-radius:14px;color:#fff;font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(21,101,192,.35)}
+.pay-upi-btn:active{transform:scale(.96)}
+.pay-upi-btn.google{background:linear-gradient(135deg,#4285f4,#34a853)}
+.pay-upi-btn.phone{background:linear-gradient(135deg,#5f259f,#ab47bc)}
+.pay-upi-btn.paytm{background:linear-gradient(135deg,#006cb7,#00bcd4)}
 </style>
 </head>
 <body>
@@ -907,7 +915,7 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     <div class="sec-head" style="margin-top:8px"><div class="sec-title">FAQ</div></div>
     <div class="faq-item" onclick="toggleFaq(this)">
       <div class="faq-q">How to deposit money? <i class="fas fa-chevron-down"></i></div>
-      <div class="faq-a">Go to Wallet → Add Money. Scan the QR code or use UPI ID to pay. Enter UTR number and optionally upload payment screenshot. Admin will approve within a few hours.</div>
+      <div class="faq-a">Go to Wallet → Add Money. Select amount and click "Pay with UPI" button. Pay via GPay, PhonePe, Paytm or any UPI app. Balance auto-credited instantly!</div>
     </div>
     <div class="faq-item" onclick="toggleFaq(this)">
       <div class="faq-q">Room ID kab milega? <i class="fas fa-chevron-down"></i></div>
@@ -1104,16 +1112,16 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
     <!-- MODE TABS -->
     <div class="dep-mode-tabs">
       <div class="dep-mode-tab active" id="dep-tab-instant" onclick="switchDepMode('instant')">
-        <i class="fas fa-bolt"></i>Instant Deposit
+        <i class="fas fa-bolt"></i>Instant UPI Pay
       </div>
       <div class="dep-mode-tab" id="dep-tab-manual" onclick="switchDepMode('manual')">
         <i class="fas fa-user-shield"></i>Manual (Admin)
       </div>
     </div>
 
-    <!-- INSTANT DEPOSIT -->
+    <!-- INSTANT UPI PAY -->
     <div class="dep-section active" id="dep-sec-instant">
-      <div class="info-box info" style="margin-bottom:12px"><i class="fas fa-info-circle"></i> Select amount → Scan QR → Pay → Balance auto-credited instantly!</div>
+      <div class="info-box info" style="margin-bottom:12px"><i class="fas fa-info-circle"></i> Select amount → Click Pay → Complete UPI payment → Balance credited instantly!</div>
       <div style="font-size:.72rem;color:var(--muted);font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px">Select Amount (₹)</div>
       <div class="amount-grid">
         <div class="amt-chip" onclick="selectAmount(50, this)">₹50</div>
@@ -1124,37 +1132,35 @@ input:checked+.toggle-sl::before{transform:translateX(22px)}
         <div class="amt-chip" onclick="selectAmount(2000, this)">₹2000</div>
       </div>
       <div class="dep-custom-row">
-        <input class="inp" id="instant-custom-amt" type="number" placeholder="Custom amount (₹)" min="1">
-        <button class="btn btn-primary btn-sm" onclick="applyCustomAmt()">Set</button>
+        <input class="inp" id="instant-custom-amt" type="number" placeholder="Custom amount (₹)" min="1" oninput="onCustomAmtInput()">
+        <button class="btn btn-primary btn-sm" onclick="applyCustomAmt()">Pay This</button>
       </div>
 
       <div id="instant-no-amt" style="text-align:center;padding:18px 0;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:.85rem">
         <i class="fas fa-hand-pointer" style="font-size:1.5rem;display:block;margin-bottom:6px;opacity:.4"></i>
-        Select an amount above to generate your payment QR
+        Select an amount above and click to pay
       </div>
 
-      <div id="instant-qr-container" style="display:none">
-        <div class="instant-qr-box">
-          <div class="qr-amount-tag" id="qr-amount-tag">₹100</div>
-          <img id="instant-qr-img" src="" alt="UPI QR Code">
-          <div class="qr-upi-id" id="qr-upi-display">Loading UPI...</div>
-          <div class="qr-apps">
-            <div class="qr-app"><div class="qr-app-icon gpay"><i class="fab fa-google" style="color:#fff;font-size:.9rem"></i></div><span>GPay</span></div>
-            <div class="qr-app"><div class="qr-app-icon phonepe"><i class="fas fa-mobile-alt" style="color:#fff;font-size:.9rem"></i></div><span>PhonePe</span></div>
-            <div class="qr-app"><div class="qr-app-icon paytm"><i class="fas fa-wallet" style="color:#fff;font-size:.9rem"></i></div><span>Paytm</span></div>
-            <div class="qr-app"><div class="qr-app-icon bhim"><i class="fas fa-university" style="color:#fff;font-size:.9rem"></i></div><span>BHIM</span></div>
-          </div>
-          <div class="qr-timer" id="qr-timer"><i class="fas fa-clock"></i>&nbsp;<span id="qr-timer-txt">05:00</span></div>
+      <div id="instant-pay-btns" style="display:none;margin-top:12px">
+        <div style="text-align:center;font-family:Orbitron,monospace;font-size:1.2rem;color:var(--gold);margin-bottom:12px" id="selected-amt-display">₹0</div>
+        <div style="font-size:.72rem;color:var(--muted);font-family:Rajdhani,sans-serif;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:10px;text-align:center">Pay with your UPI App</div>
+        <div class="pay-btn-row">
+          <button class="pay-upi-btn google" onclick="payWithUPI('gpay')">
+            <i class="fab fa-google"></i> GPay
+          </button>
+          <button class="pay-upi-btn phone" onclick="payWithUPI('phonepe')">
+            <i class="fas fa-mobile-alt"></i> PhonePe
+          </button>
         </div>
-        <div style="margin-bottom:12px">
-          <div class="instant-step"><div class="instant-step-num">1</div>Select amount &amp; QR generates automatically</div>
-          <div class="instant-step"><div class="instant-step-num">2</div>Scan QR with GPay / PhonePe / Paytm / BHIM</div>
-          <div class="instant-step"><div class="instant-step-num">3</div>Pay the exact amount shown — QR valid for 5 minutes</div>
-          <div class="instant-step"><div class="instant-step-num">4</div>Balance auto-credited after payment detection ✨</div>
+        <div class="pay-btn-row">
+          <button class="pay-upi-btn paytm" onclick="payWithUPI('paytm')">
+            <i class="fas fa-wallet"></i> Paytm
+          </button>
+          <button class="pay-upi-btn" onclick="payWithUPI('other')">
+            <i class="fas fa-university"></i> Other UPI
+          </button>
         </div>
-        <div id="instant-status-box" style="display:none" class="info-box success">
-          <i class="fas fa-check-circle"></i> <span id="instant-status-txt">Payment detected! Adding balance...</span>
-        </div>
+        <div id="instant-pay-status" style="text-align:center;margin-top:14px;min-height:20px"></div>
       </div>
     </div>
 
@@ -1379,6 +1385,11 @@ let db, auth, currentUser = null, userData = null, splashHidden = false;
 let allTournamentsCache = [], allUsersCache = [];
 const countdownTimers = {};
 
+// ── SYNEX PAY STATE ──
+let synexPayActive = false;
+let synexPayAmount = 0;
+let synexPayTxKey = null;
+
 // ── SPLASH ──
 function hideSplash() {
   if (splashHidden) return;
@@ -1422,6 +1433,16 @@ function showApp() {
   loadLiveSection();
   loadNotifications();
   updateHeroBanner();
+  checkAutoDeleteTournaments();
+  // Load tickets count
+  if(currentUser) {
+    db.ref('users/'+currentUser.uid+'/tickets').on('value',s=>{
+      const t=s.val()||0;
+      userData.tickets=t;
+      const ht=document.getElementById('hero-tickets');
+      if(ht) ht.textContent='🎫'+t;
+    });
+  }
   // Request permissions after short delay
   setTimeout(requestAppPermissions, 1500);
 }
@@ -1619,6 +1640,8 @@ function navTo(page) {
   if(page==='referral') loadReferral();
   if(page==='profile') loadProfile();
   if(page==='support') loadSupportLinks();
+  if(page==='spin') loadSpinWheel();
+  if(page==='store') loadStore();
 }
 
 function openSideMenu(){document.getElementById('sidemenu').classList.add('show');document.getElementById('overlay').classList.add('show');}
@@ -1633,6 +1656,7 @@ function updateHeroBanner() {
   const matchCount = userData.registeredMatches ? Object.keys(userData.registeredMatches).length : 0;
   document.getElementById('hero-matches').textContent=matchCount;
   document.getElementById('hero-wins').textContent=(userData.stats?.wins||0);
+  const ht=document.getElementById('hero-tickets');if(ht) ht.textContent='🎫'+(userData.tickets||0);
 }
 
 // ── LIVE SECTION ──
@@ -1694,6 +1718,7 @@ function filterTournaments(type, btn) {
   btn.classList.add('active');
   let filtered=allTournamentsCache;
   if(type==='free') filtered=allTournamentsCache.filter(t=>!t.entryFee||t.entryFee===0);
+  else if(type==='ticket') filtered=allTournamentsCache.filter(t=>t.entryType==='ticket');
   else if(type!=='all') filtered=allTournamentsCache.filter(t=>(t.mode||'solo')===type);
   renderTournaments(filtered);
 }
@@ -1713,14 +1738,15 @@ function getMyMatchIds() {
 }
 
 function buildTCard(t, tid, joined, full) {
+  const isTicket=t.entryType==='ticket';
   const thumb = t.thumbnail
     ? `<img class="t-thumb" src="${t.thumbnail}" alt="${t.name}" onerror="this.parentElement.innerHTML='<div class=t-thumb-placeholder><i class=fas\\ fa-gamepad></i></div>'">`
     : `<div class="t-thumb-placeholder"><i class="fas fa-gamepad"></i></div>`;
   let btn='';
   if(joined) btn=`<button class="join-btn joined"><i class="fas fa-check"></i> Joined</button>`;
   else if(full) btn=`<button class="join-btn full"><i class="fas fa-lock"></i> Full</button>`;
-  else btn=`<button class="join-btn" onclick="openJoinConfirm('${tid}')"><i class="fas fa-gamepad"></i> Join Now</button>`;
-  const fee = t.entryFee==0?`<span class="t-fee free"><i class="fas fa-gift"></i> FREE</span>`:`<span class="t-fee">₹${t.entryFee}</span>`;
+  else btn=`<button class="join-btn" onclick="openJoinConfirm('${tid}')" style="${isTicket?'background:linear-gradient(135deg,#4a148c,#7c4dff)':''}"><i class="fas ${isTicket?'fa-ticket-alt':'fa-gamepad'}"></i> ${isTicket?'Use Ticket':'Join Now'}</button>`;
+  const fee=isTicket?`<span class="t-fee" style="background:rgba(124,77,255,.1);border-color:var(--purple);color:var(--purple)">🎫 Ticket</span>`:t.entryFee==0?`<span class="t-fee free"><i class="fas fa-gift"></i> FREE</span>`:`<span class="t-fee">₹${t.entryFee}</span>`;
   const modeLabels={solo:'👤 Solo',duo:'👥 Duo',squad:'⚔️ Squad'};
   const modeLbl=modeLabels[t.mode||'solo']||'👤 Solo';
   const pct=Math.min(100,((t.registered||0)/(t.maxPlayers||32))*100);
@@ -1741,6 +1767,7 @@ function buildTCard(t, tid, joined, full) {
         <div style="display:flex;gap:5px;align-items:center">
           ${joined?'<span class="badge badge-new">✓ Joined</span>':''}
           ${isFull&&!joined?'<span class="badge" style="background:rgba(255,68,68,.2);border:1px solid var(--danger);color:var(--danger)">Full</span>':''}
+          ${isTicket?'<span class="badge" style="background:rgba(124,77,255,.2);border:1px solid var(--purple);color:var(--purple)">🎫 Ticket Only</span>':''}
         </div>
       </div>
     </div>
@@ -1791,9 +1818,11 @@ async function openJoinConfirm(tid) {
     const snap=await db.ref('tournaments/'+tid).once('value');
     if(!snap.exists()){showToast('Not found','error');return;}
     const t=snap.val();
+    const isTicket=t.entryType==='ticket';
     const fee=t.entryFee||0;
     const bal=userData.wallet||0;
-    if(bal<fee){showToast('Insufficient balance! Add money first','warn');openAddMoney();return;}
+    if(isTicket&&(userData.tickets||0)<=0){showToast('No tickets! Store se kharido.','warn');navTo('store');return;}
+    if(!isTicket&&bal<fee){showToast('Insufficient balance! Add money first','warn');openAddMoney();return;}
     const myIds=getMyMatchIds();
     if(myIds.includes(tid)){showToast('Already joined!','warn');return;}
     if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament is full!','error');return;}
@@ -1801,9 +1830,9 @@ async function openJoinConfirm(tid) {
     document.getElementById('jc-name').textContent=t.name;
     const ml=(t.mode||'solo').charAt(0).toUpperCase()+(t.mode||'solo').slice(1);
     document.getElementById('jc-meta').textContent=`${t.map||'Bermuda'} · ${ml} · ${t.registered||0}/${t.maxPlayers||32} Players`;
-    document.getElementById('jc-fee').textContent=fee===0?'FREE':'₹'+fee;
+    document.getElementById('jc-fee').textContent=isTicket?'🎫 Ticket':fee===0?'FREE':'₹'+fee;
     document.getElementById('jc-bal').textContent='₹'+bal;
-    document.getElementById('jc-after').textContent='₹'+(bal-fee);
+    document.getElementById('jc-after').textContent=isTicket?'🎫 '+(userData.tickets||0)+'→'+(userData.tickets-1):'₹'+(bal-fee);
     document.getElementById('jc-after').style.color=(bal-fee)<0?'var(--danger)':'var(--warn)';
     const tw=document.getElementById('jc-thumb-wrap');
     tw.innerHTML=t.thumbnail?`<img src="${t.thumbnail}" style="width:100%;height:100%;object-fit:cover">`:`<i class="fas fa-gamepad" style="font-size:2rem;color:var(--border)"></i>`;
@@ -1819,73 +1848,41 @@ async function confirmJoin() {
 
 async function joinTournament(tid) {
   if(!currentUser||!userData) return;
-  const joinBtn = document.querySelector(`[onclick="openJoinConfirm('${tid}')"]`);
-  if(joinBtn){joinBtn.disabled=true;joinBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Joining...';}
   try {
-    // Fresh snapshot from Firebase - latest data lao
-    const [tSnap, uSnap] = await Promise.all([
-      db.ref('tournaments/'+tid).once('value'),
-      db.ref('users/'+currentUser.uid).once('value')
-    ]);
-    if(!tSnap.exists()){showToast('Tournament not found','error');return;}
+    const tSnap=await db.ref('tournaments/'+tid).once('value');
+    if(!tSnap.exists()){showToast('Not found','error');return;}
     const t=tSnap.val();
-    const freshUser=uSnap.val()||{};
+    const isTicket=t.entryType==='ticket';
     const fee=t.entryFee||0;
-    const curBal=freshUser.wallet||0;
-
-    // Fresh checks with live data
-    if(curBal<fee){showToast('Balance kam hai! Add money karo.','warn');openAddMoney();return;}
-    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament full ho gaya!','error');loadTournaments();return;}
-
-    // Already joined check (fresh from Firebase)
-    const regSnap=await db.ref('users/'+currentUser.uid+'/registeredMatches').once('value');
-    const regData=regSnap.val()||{};
-    const alreadyJoined=Object.values(regData).some(m=>m&&m.id===tid);
-    if(alreadyJoined){showToast('Already joined!','warn');return;}
-
-    const newBal=curBal-fee;
-    const mKey=db.ref().push().key, txKey=db.ref().push().key;
-    const matchEntry={id:tid,name:t.name,status:'upcoming',prizePool:t.prizePool,entryFee:fee,map:t.map,mode:t.mode||'solo',joinedAt:Date.now()};
-    const tx={type:'Tournament Join',amount:-fee,date:Date.now(),status:'completed',desc:t.name};
-    const newXP=(freshUser.xp||0)+XP_PER_MATCH;
+    
+    if(isTicket&&(userData.tickets||0)<=0){showToast('No tickets!','warn');return;}
+    if(!isTicket&&fee>(userData.wallet||0)){showToast('Insufficient balance!','warn');return;}
+    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament full!','error');return;}
+    
+    const myIds=getMyMatchIds();if(myIds.includes(tid)){showToast('Already joined!','warn');return;}
+    
+    const newBal=(userData.wallet||0)-fee;
+    const newTickets=isTicket?(userData.tickets||0)-1:userData.tickets||0;
+    const mKey=db.ref().push().key,txKey=db.ref().push().key;
+    const matchEntry={id:tid,name:t.name,status:'upcoming',prizePool:t.prizePool,entryFee:isTicket?'ticket':fee,map:t.map,mode:t.mode||'solo',joinedAt:Date.now()};
+    const tx={type:isTicket?'Ticket Used':'Tournament Join',amount:isTicket?0:-fee,date:Date.now(),status:'completed',desc:t.name};
     const upd={};
-    upd['users/'+currentUser.uid+'/wallet']=newBal;
+    if(isTicket) upd['users/'+currentUser.uid+'/tickets']=newTickets;
+    else upd['users/'+currentUser.uid+'/wallet']=newBal;
     upd['users/'+currentUser.uid+'/registeredMatches/'+mKey]=matchEntry;
     upd['users/'+currentUser.uid+'/transactions/'+txKey]=tx;
-    upd['users/'+currentUser.uid+'/xp']=newXP;
     upd['tournaments/'+tid+'/registered']=(t.registered||0)+1;
-    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||freshUser.name||'Player',ign:userData.ign||freshUser.ign||'',squad:userData.squad||freshUser.squad||'',joinedAt:Date.now()};
+    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||'Player',username:userData.username||'',ign:userData.ign||'',squad:userData.squad||'',joinedAt:Date.now()};
+    const newXP=(userData.xp||0)+XP_PER_MATCH;
+    upd['users/'+currentUser.uid+'/xp']=newXP;
     await db.ref().update(upd);
-
-    // Local userData sync
-    userData.wallet=newBal;
+    if(isTicket) userData.tickets=newTickets; else userData.wallet=newBal;
     userData.xp=newXP;
-    if(!userData.registeredMatches||Array.isArray(userData.registeredMatches)) userData.registeredMatches={};
+    if(!userData.registeredMatches) userData.registeredMatches={};
     userData.registeredMatches[mKey]=matchEntry;
-
     showToast('Joined! 🎮 +'+XP_PER_MATCH+' XP','success');
-
-    // Send join notification
-    try {
-      const nk=db.ref().push().key;
-      await db.ref('notifications/'+currentUser.uid+'/'+nk).set({
-        title:'🎮 Tournament Joined!',body:'You joined: '+t.name+'. Get ready!',type:'tournament',date:Date.now(),read:false
-      });
-    } catch(e){}
-
-    loadTournaments();
-    updateHeroBanner();
-    updateSideMenu();
-  } catch(e){
-    console.error('Join error:',e);
-    if(e.code==='PERMISSION_DENIED'){
-      showToast('Permission error. Firebase Rules check karo.','error');
-    } else {
-      showToast('Join mein error aaya. Dobara try karo.','error');
-    }
-  } finally {
-    if(joinBtn){joinBtn.disabled=false;joinBtn.innerHTML='<i class="fas fa-gamepad"></i> Join Now';}
-  }
+    loadTournaments();updateHeroBanner();
+  } catch(e){console.error(e);showToast('Error joining','error');}
 }
 
 // ── TOURNAMENT DETAIL ──
@@ -1964,6 +1961,7 @@ async function loadMatches() {
         } catch(e){}
       }
       const modeE={solo:'👤',duo:'👥',squad:'⚔️'}[m.mode||'solo']||'👤';
+      const feeStr=m.entryFee==='ticket'?'🎫 Ticket':m.entryFee===0?'FREE':'₹'+m.entryFee;
       return `<div class="m-card fiu">
         <div class="m-card-header">
           <div style="display:flex;align-items:center;justify-content:space-between">
@@ -1974,7 +1972,7 @@ async function loadMatches() {
         <div class="m-card-body">
           <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:'Rajdhani',sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:8px">
             <span>🏆 ${m.prizePool||'—'}</span>
-            ${m.entryFee!=null?`<span>💰 ${m.entryFee===0?'FREE':'₹'+m.entryFee}</span>`:''}
+            <span>💰 ${feeStr}</span>
             ${m.map?`<span>🗺️ ${m.map}</span>`:''}
             <span>${modeE} ${(m.mode||'solo').charAt(0).toUpperCase()+(m.mode||'solo').slice(1)}</span>
             <span>📅 ${dateStr}</span>
@@ -2008,7 +2006,7 @@ async function loadWallet() {
     if(filter==='credit') arr=arr.filter(t=>t.amount>0);
     else if(filter==='debit') arr=arr.filter(t=>t.amount<0);
     else if(filter==='pending') arr=arr.filter(t=>t.status==='pending');
-    const iconMap={'Deposit':'fa-arrow-down','Tournament Join':'fa-gamepad','Withdrawal':'fa-arrow-up','Welcome Bonus':'fa-gift','Referral Bonus':'fa-share-alt','Match Prize':'fa-trophy','Admin Adjustment':'fa-edit'};
+    const iconMap={'Deposit':'fa-arrow-down','Tournament Join':'fa-gamepad','Withdrawal':'fa-arrow-up','Welcome Bonus':'fa-gift','Referral Bonus':'fa-share-alt','Match Prize':'fa-trophy','Admin Adjustment':'fa-edit','UPI Payment':'fa-arrow-down','UPI Deposit':'fa-arrow-down','Ticket Used':'fa-ticket-alt'};
     el.innerHTML=arr.map(tx=>{
       const cr=tx.amount>0, isPend=tx.status==='pending';
       const icon=iconMap[tx.type]||'fa-exchange-alt';
@@ -2027,7 +2025,6 @@ async function loadWallet() {
 }
 
 // ── DEPOSIT SYSTEM ──
-let instantDepState = { amount: 0, qrKey: null, txKey: null, timerInterval: null, pollInterval: null, expired: false, active: false, _fbRef: null };
 const DEFAULT_UPI = 'aqdaskhan03@fam';
 const DEFAULT_UPI_NAME = 'Synex';
 
@@ -2040,7 +2037,7 @@ async function getAdminUPI() {
 }
 
 function openAddMoney() {
-  clearInstantDeposit();
+  closeSynexPaySession();
   openModal('modal-addmoney');
   // Switch to instant tab by default
   switchDepMode('instant');
@@ -2061,9 +2058,10 @@ function switchDepMode(mode) {
   document.querySelectorAll('.dep-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('dep-tab-'+mode).classList.add('active');
   document.getElementById('dep-sec-'+mode).classList.add('active');
-  if(mode==='manual') clearInstantDeposit();
+  if(mode==='manual') closeSynexPaySession();
 }
 
+// ── INSTANT UPI PAY WITH SYNEX PAY WIDGET ──
 function selectAmount(amt, el) {
   document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
   if(el) el.classList.add('selected');
@@ -2073,178 +2071,194 @@ function selectAmount(amt, el) {
     });
   }
   document.getElementById('instant-custom-amt').value = '';
-  generateInstantQR(amt);
+  synexPayAmount = amt;
+  
+  // Show pay buttons
+  document.getElementById('instant-no-amt').style.display = 'none';
+  document.getElementById('instant-pay-btns').style.display = 'block';
+  document.getElementById('selected-amt-display').textContent = '₹'+amt;
+  document.getElementById('instant-pay-status').innerHTML = '';
 }
 
 function onCustomAmtInput() {
   document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('instant-pay-btns').style.display = 'none';
+  document.getElementById('instant-no-amt').style.display = 'block';
 }
 
 function applyCustomAmt() {
   const val = parseInt(document.getElementById('instant-custom-amt').value);
   if(!val||val<1){showToast('Enter valid amount','error');return;}
+  synexPayAmount = val;
   document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
-  generateInstantQR(val);
-}
-
-async function generateInstantQR(amount) {
-  // Stop any previous session
-  clearInstantDeposit();
-
-  instantDepState.amount = amount;
-  instantDepState.expired = false;
-  instantDepState.active = true;
-
-  // Show QR box, hide placeholder
   document.getElementById('instant-no-amt').style.display = 'none';
-  document.getElementById('instant-qr-container').style.display = 'block';
-  document.getElementById('instant-status-box').style.display = 'none';
+  document.getElementById('instant-pay-btns').style.display = 'block';
+  document.getElementById('selected-amt-display').textContent = '₹'+val;
+  document.getElementById('instant-pay-status').innerHTML = '';
+}
 
-  const upi = await getAdminUPI();
-  const qrData = 'upi://pay?pa='+upi.id+'&pn='+encodeURIComponent(upi.name)+'&am='+amount+'&cu=INR';
-  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(qrData);
-
-  document.getElementById('instant-qr-img').src = qrUrl;
-  document.getElementById('qr-amount-tag').textContent = '₹'+amount;
-  document.getElementById('qr-upi-display').textContent = upi.id;
-
-  // Reset timer display
-  const timerEl = document.getElementById('qr-timer');
-  const timerTxt = document.getElementById('qr-timer-txt');
-  timerEl.className = 'qr-timer';
-  timerTxt.textContent = '05:00';
-
-  // Save pending deposit in Firebase
-  const key = db.ref('instantDeposits').push().key;
-  instantDepState.qrKey = key;
-  const expiresAt = Date.now() + 5*60*1000;
-
+async function payWithUPI(app) {
+  if(!synexPayAmount||synexPayAmount<1){showToast('Select amount first!','error');return;}
+  if(synexPayActive){showToast('Payment already in progress...','warn');return;}
+  
+  synexPayActive = true;
+  const amount = synexPayAmount;
+  const statusEl = document.getElementById('instant-pay-status');
+  statusEl.innerHTML = '<div class="loading-wrap"><div class="spin"></div><p style="margin-top:6px">Opening payment...</p></div>';
+  
+  // Create pending record in Firebase
   const txKey = db.ref().push().key;
-  instantDepState.txKey = txKey;
-
+  synexPayTxKey = txKey;
+  
   try {
+    await db.ref('users/'+currentUser.uid+'/transactions/'+txKey).set({
+      type:'UPI Payment',
+      amount:amount,
+      date:Date.now(),
+      status:'pending',
+      desc:'Instant UPI deposit via Synex Pay',
+      app:app||'other'
+    });
+  } catch(e) { console.error('FB write error:', e); }
+  
+  // Generate order ID
+  const orderId = 'SYNEX-'+Date.now()+'-'+Math.random().toString(36).substr(2,5).toUpperCase();
+  
+  // Check if SyncPay is loaded
+  if(typeof SyncPay !== 'undefined' && SyncPay.open) {
+    try {
+      SyncPay.open({
+        amount: amount,
+        note: orderId,
+        onSuccess: function(result) {
+          synexPayActive = false;
+          creditUserBalance(amount, txKey, result);
+          statusEl.innerHTML = '<div class="info-box success"><i class="fas fa-check-circle"></i> Payment successful! ₹'+amount+' credited.</div>';
+          setTimeout(()=>{ closeDepositModal(); }, 2000);
+        },
+        onFailure: function(error) {
+          synexPayActive = false;
+          statusEl.innerHTML = '<div class="info-box danger"><i class="fas fa-times-circle"></i> Payment failed. Please try again.</div>';
+          markTxFailed(txKey);
+        },
+        onClose: function() {
+          if(synexPayActive) {
+            synexPayActive = false;
+            statusEl.innerHTML = '<div class="info-box info"><i class="fas fa-info-circle"></i> Payment window closed. If you paid, balance will update shortly.</div>';
+          }
+        }
+      });
+    } catch(e) {
+      synexPayActive = false;
+      console.error('SyncPay error:', e);
+      // Fallback: open UPI apps directly
+      openUPIAppFallback(amount, app, orderId, txKey, statusEl);
+    }
+  } else {
+    // SyncPay not loaded - fallback
+    synexPayActive = false;
+    openUPIAppFallback(amount, app, orderId, txKey, statusEl);
+  }
+}
+
+function openUPIAppFallback(amount, app, orderId, txKey, statusEl) {
+  const upiID = DEFAULT_UPI;
+  const upiName = DEFAULT_UPI_NAME;
+  
+  let upiUrl = '';
+  switch(app) {
+    case 'gpay':
+      upiUrl = 'tez://upi/pay?pa='+upiID+'&pn='+upiName+'&am='+amount+'&tn='+orderId;
+      break;
+    case 'phonepe':
+      upiUrl = 'phonepe://pay?pa='+upiID+'&pn='+upiName+'&am='+amount+'&tn='+orderId;
+      break;
+    case 'paytm':
+      upiUrl = 'paytmmp://pay?pa='+upiID+'&pn='+upiName+'&am='+amount+'&tn='+orderId;
+      break;
+    default:
+      upiUrl = 'upi://pay?pa='+upiID+'&pn='+upiName+'&am='+amount+'&tn='+orderId;
+  }
+  
+  statusEl.innerHTML = '<div class="info-box info"><i class="fas fa-external-link-alt"></i> Opening your UPI app...<br><small>If app doesn\'t open, try another payment option.</small></div>';
+  
+  // Try to open app
+  const link = document.createElement('a');
+  link.href = upiUrl;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  // Also show QR as fallback
+  setTimeout(async () => {
+    const upi = await getAdminUPI();
+    const qrData = 'upi://pay?pa='+upi.id+'&pn='+encodeURIComponent(upi.name)+'&am='+amount+'&tn='+orderId+'&cu=INR';
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(qrData);
+    statusEl.innerHTML += `<div style="margin-top:12px;text-align:center">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">Or scan QR to pay:</div>
+      <img src="${qrUrl}" style="width:150px;height:150px;border-radius:12px;border:2px solid rgba(0,229,255,.3);background:#fff">
+      <div style="font-size:.7rem;color:var(--muted);margin-top:4px">UPI: ${upi.id}</div>
+      <div style="font-size:.65rem;color:var(--warn);margin-top:6px">⚠️ After payment, contact admin with UTR for manual verification</div>
+    </div>`;
+  }, 500);
+}
+
+async function creditUserBalance(amount, txKey, result) {
+  try {
+    const cur = (await db.ref('users/'+currentUser.uid+'/wallet').once('value')).val()||0;
+    const newBal = cur + amount;
     const upd = {};
-    upd['instantDeposits/'+key] = {
-      userId: currentUser.uid, userName: userData.name||'', email: currentUser.email,
-      amount, status:'pending', createdAt: Date.now(), expiresAt, upiId: upi.id
+    upd['users/'+currentUser.uid+'/wallet'] = newBal;
+    upd['users/'+currentUser.uid+'/transactions/'+txKey+'/status'] = 'completed';
+    upd['users/'+currentUser.uid+'/transactions/'+txKey+'/desc'] = 'UPI Deposit via Synex Pay';
+    
+    // Log to payments node for admin tracking
+    const payKey = db.ref().push().key;
+    upd['payments/'+payKey] = {
+      userId:currentUser.uid,
+      userName:userData.name||'',
+      email:currentUser.email,
+      amount:amount,
+      status:'completed',
+      orderId:result?.orderId||txKey,
+      createdAt:Date.now()
     };
-    upd['users/'+currentUser.uid+'/transactions/'+txKey] = {
-      type:'Instant Deposit', amount, date: Date.now(), status:'pending', desc:'Awaiting payment (QR active)', _qrKey: key
-    };
+    
     await db.ref().update(upd);
-  } catch(e) { console.error('Firebase write error:', e); }
-
-  startQRTimer(expiresAt);
-  startPaymentPolling(key, amount);
+    
+    // Notification
+    const nk = db.ref().push().key;
+    await db.ref('notifications/'+currentUser.uid+'/'+nk).set({
+      title:'✅ Payment Successful!',
+      body:'₹'+amount+' added to your wallet via UPI! 🎉',
+      type:'deposit',date:Date.now(),read:false
+    });
+    
+    showToast('₹'+amount+' credited! 🎉','success');
+  } catch(e) { console.error('Credit error:', e); }
 }
 
-function startQRTimer(expiresAt) {
-  clearInterval(instantDepState.timerInterval);
-  const timerEl = document.getElementById('qr-timer');
-  const timerTxt = document.getElementById('qr-timer-txt');
-
-  function tick() {
-    const remaining = expiresAt - Date.now();
-    if(remaining <= 0) {
-      clearInterval(instantDepState.timerInterval);
-      clearInterval(instantDepState.pollInterval);
-      instantDepState.expired = true;
-      timerTxt.textContent = 'EXPIRED';
-      timerEl.className = 'qr-timer expired';
-      if(instantDepState.qrKey) db.ref('instantDeposits/'+instantDepState.qrKey+'/status').set('expired').catch(()=>{});
-      const sb = document.getElementById('instant-status-box');
-      if(sb) { sb.style.display='block'; sb.className='info-box danger'; document.getElementById('instant-status-txt').textContent='QR expired. Tap an amount to generate a new one.'; }
-      return;
-    }
-    const mins = Math.floor(remaining/60000);
-    const secs = Math.floor((remaining%60000)/1000);
-    timerTxt.textContent = String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
-    // Turn red in last 60 seconds
-    if(remaining < 60000) timerEl.className='qr-timer expired';
-    else timerEl.className='qr-timer';
-  }
-
-  tick(); // run immediately
-  instantDepState.timerInterval = setInterval(tick, 1000);
+async function markTxFailed(txKey) {
+  try {
+    await db.ref('users/'+currentUser.uid+'/transactions/'+txKey+'/status').set('failed');
+  } catch(e) {}
 }
 
-function startPaymentPolling(key, amount) {
-  // Purana listener cancel karo
-  if(instantDepState._fbRef) { try{instantDepState._fbRef.off();}catch(e){} }
-
-  const ref = db.ref('instantDeposits/'+key+'/status');
-  instantDepState._fbRef = ref;
-
-  // ✅ REALTIME LISTENER - jaise hi admin Mark Paid kare, turant detect hoga
-  ref.on('value', async snap => {
-    const status = snap.val();
-    if(instantDepState.expired) { ref.off(); return; }
-
-    if(status === 'paid') {
-      ref.off();
-      clearInterval(instantDepState.timerInterval);
-      instantDepState.active = false;
-
-      try {
-        // Balance credit karo
-        const walSnap = await db.ref('users/'+currentUser.uid+'/wallet').once('value');
-        const cur = walSnap.val()||0;
-        const newBal = cur + amount;
-        const upd = {};
-        upd['users/'+currentUser.uid+'/wallet'] = newBal;
-        if(instantDepState.txKey) upd['users/'+currentUser.uid+'/transactions/'+instantDepState.txKey+'/status'] = 'completed';
-        upd['instantDeposits/'+key+'/creditedAt'] = Date.now();
-        await db.ref().update(upd);
-
-        // Notification
-        const nk = db.ref().push().key;
-        await db.ref('notifications/'+currentUser.uid+'/'+nk).set({
-          title:'✅ Payment Confirmed!', body:'₹'+amount+' added to your wallet! 🎉',
-          type:'deposit', date:Date.now(), read:false
-        });
-
-        // UI update - turant dikhega
-        const timerEl = document.getElementById('qr-timer');
-        if(timerEl) { timerEl.className='qr-timer success'; document.getElementById('qr-timer-txt').textContent='PAID ✓'; }
-        const sb = document.getElementById('instant-status-box');
-        if(sb) { sb.style.display='block'; sb.className='info-box success'; document.getElementById('instant-status-txt').textContent='✅ ₹'+amount+' added to your wallet!'; }
-        showToast('₹'+amount+' credited! 🎉','success');
-
-        // 2.5s baad modal close
-        setTimeout(()=>{ closeDepositModal(); }, 2500);
-      } catch(e) { console.error('Credit error:', e); }
-    }
-  });
-}
-
-function clearInstantDeposit() {
-  clearInterval(instantDepState.timerInterval);
-  clearInterval(instantDepState.pollInterval);
-  // Realtime listener cancel karo
-  if(instantDepState._fbRef) { try{instantDepState._fbRef.off();}catch(e){} }
-  // If there was an active QR, mark it expired in Firebase
-  if(instantDepState.active && instantDepState.qrKey) {
-    db.ref('instantDeposits/'+instantDepState.qrKey+'/status').set('expired').catch(()=>{});
-  }
-  instantDepState = { amount:0, qrKey:null, txKey:null, timerInterval:null, pollInterval:null, expired:false, active:false, _fbRef:null };
-
-  const container = document.getElementById('instant-qr-container');
-  const noAmt = document.getElementById('instant-no-amt');
-  if(container) container.style.display='none';
-  if(noAmt) noAmt.style.display='block';
+function closeSynexPaySession() {
+  synexPayActive = false;
+  synexPayAmount = 0;
+  synexPayTxKey = null;
+  document.getElementById('instant-pay-btns').style.display = 'none';
+  document.getElementById('instant-no-amt').style.display = 'block';
+  document.getElementById('instant-pay-status').innerHTML = '';
   document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
   const ca = document.getElementById('instant-custom-amt');
   if(ca) ca.value='';
-  const timerTxt = document.getElementById('qr-timer-txt');
-  if(timerTxt) timerTxt.textContent='05:00';
-  const timerEl = document.getElementById('qr-timer');
-  if(timerEl) timerEl.className='qr-timer';
-  const sb = document.getElementById('instant-status-box');
-  if(sb) sb.style.display='none';
 }
 
 function closeDepositModal() {
-  clearInstantDeposit();
+  closeSynexPaySession();
   closeModal('modal-addmoney');
 }
 
@@ -2289,26 +2303,16 @@ async function loadInstantDepRequests() {
   if(!el) return;
   el.innerHTML = '<div class="loading-wrap"><div class="spin"></div></div>';
   try {
-    const snap = await db.ref('instantDeposits').orderByChild('status').equalTo('pending').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>No pending instant deposits</p></div>';return;}
+    const snap = await db.ref('payments').orderByChild('status').equalTo('completed').limitToLast(20).once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>No recent payments</p></div>';return;}
     let html='';
     snap.forEach(c=>{
       const r=c.val(), rid=c.key;
-      const remaining = r.expiresAt - Date.now();
-      const isExp = remaining<=0;
-      const mins = isExp?0:Math.floor(remaining/60000);
-      const secs = isExp?0:Math.floor((remaining%60000)/1000);
-      const timeStr = isExp?'<span style="color:var(--danger)">Expired</span>':`<span style="color:var(--warn)">${mins}m ${secs}s left</span>`;
       html+=`<div class="acard"><div class="req-row">
         <div class="req-info">
           <div class="rname">${r.userName} <span style="color:var(--muted);font-size:.68rem">${r.email||''}</span></div>
-          <div class="ramt">₹${r.amount}</div>
-          <div class="rutr">UPI: ${r.upiId||'—'} · ${new Date(r.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-          <div class="rutr">Timer: ${timeStr}</div>
-        </div>
-        <div class="req-btns">
-          <button class="sm-btn" onclick="approveInstantDeposit('${rid}','${r.userId}',${r.amount})">✓ Mark Paid</button>
-          <button class="sm-btn rej" onclick="rejectInstantDeposit('${rid}','${r.userId}')">✗ Reject</button>
+          <div class="ramt">₹${r.amount} <span class="trans-status completed">${r.status}</span></div>
+          <div class="rutr">${new Date(r.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
         </div>
       </div></div>`;
     });
@@ -2316,32 +2320,7 @@ async function loadInstantDepRequests() {
   } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
 }
 
-async function approveInstantDeposit(rid, userId, amount) {
-  try {
-    const cur = (await db.ref('users/'+userId+'/wallet').once('value')).val()||0;
-    const newBal = cur+amount;
-    const upd = {};
-    upd['users/'+userId+'/wallet'] = newBal;
-    upd['instantDeposits/'+rid+'/status'] = 'paid';
-    const txSnap = await db.ref('users/'+userId+'/transactions').orderByChild('status').equalTo('pending').once('value');
-    if(txSnap.exists()) txSnap.forEach(c=>{ if(c.val().type==='Instant Deposit'&&Math.abs(c.val().amount-amount)<1) upd['users/'+userId+'/transactions/'+c.key+'/status']='completed'; });
-    await db.ref().update(upd);
-    const nk=db.ref().push().key;
-    await db.ref('notifications/'+userId+'/'+nk).set({title:'✅ Payment Confirmed!',body:'₹'+amount+' added to your wallet!',type:'deposit',date:Date.now(),read:false});
-    showToast('Instant deposit approved ✓','success');
-    loadInstantDepRequests();
-  } catch(e){showToast('Error','error');}
-}
-
-async function rejectInstantDeposit(rid, userId) {
-  try {
-    await db.ref('instantDeposits/'+rid+'/status').set('rejected');
-    const nk=db.ref().push().key;
-    await db.ref('notifications/'+userId+'/'+nk).set({title:'❌ Payment Not Detected',body:'Instant deposit rejected. Try again or use Manual mode.',type:'default',date:Date.now(),read:false});
-    showToast('Rejected','warn');
-    loadInstantDepRequests();
-  } catch(e){showToast('Error','error');}
-}
+// Other deposit functions...
 function openWithdraw(){
   const bal=userData?.wallet||0;
   document.getElementById('wd-bal-preview').innerHTML=`Current balance: <b style="color:var(--gold)">₹${bal}</b>`;
@@ -2489,7 +2468,7 @@ function loadProfile() {
   document.getElementById('prof-av').textContent=init;
   document.getElementById('prof-name').textContent=userData.name||'';
   document.getElementById('prof-email').textContent=currentUser.email||'';
-  document.getElementById('prof-uid').textContent=currentUser.uid;
+  const puid=document.getElementById('prof-uid');if(puid)puid.textContent=currentUser.uid;
   document.getElementById('pf-ffuid').value=userData.uid||'';
   document.getElementById('pf-ign').value=userData.ign||'';
   document.getElementById('pf-dname').value=userData.name||'';
@@ -2497,6 +2476,7 @@ function loadProfile() {
   const {level}=calcLevel(userData.xp||0);
   document.getElementById('prof-level-badge').textContent='LV'+level;
   document.getElementById('prof-squad-disp').textContent=userData.squad?'👥 '+userData.squad:'';
+  const pud=document.getElementById('prof-username-disp');if(pud)pud.textContent=userData.username?'@'+userData.username:'';
   loadProfileStats();
 }
 
@@ -2576,10 +2556,6 @@ function renderNotifs() {
   const dot=document.getElementById('notif-dot');
   const unread=notifData.filter(n=>!n.read);
   dot.style.display=unread.length>0?'block':'none';
-  const nbadge=document.querySelector('.nav-item .nbadge');
-  if(unread.length>0) {
-    // add badge to notif btn
-  }
   if(!notifData.length){el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.82rem">No notifications yet</div>';return;}
   const icons={tournament:'🏆',room:'🔐',match:'🎮',deposit:'💰',default:'📢'};
   el.innerHTML=notifData.map(n=>`
@@ -2718,12 +2694,13 @@ async function loadAdminData() {
   const isAdmin=userData?.isAdmin||false;
   if(!isAdmin){showToast('Unauthorized','error');navTo('home');return;}
   loadAUsers();loadADeposits();loadAWithdrawals();loadATournaments();loadALive();
-  loadAdminUPISettings();
-  loadAdminSupportSettings();
+  loadAdminUPISettings();loadAdminSupportSettings();
+  loadAdminWheelSettings();loadAStoreItems();
 }
 
 async function loadAUsers() {
   const el=document.getElementById('a-users-list');
+  if(!el) return;
   el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
   try {
     const snap=await db.ref('users').once('value');
@@ -2732,9 +2709,9 @@ async function loadAUsers() {
     let totalWallet=0,blockedCount=0;
     snap.forEach(c=>{const u=c.val();u._uid=c.key;allUsersCache.push(u);totalWallet+=(u.wallet||0);if(u.isBlocked)blockedCount++;});
     allUsersCache.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    document.getElementById('stat-total').textContent=allUsersCache.length;
-    document.getElementById('stat-blocked').textContent=blockedCount;
-    document.getElementById('stat-wallet').textContent='₹'+totalWallet;
+    const st=document.getElementById('stat-total');if(st)st.textContent=allUsersCache.length;
+    const sb=document.getElementById('stat-blocked');if(sb)sb.textContent=blockedCount;
+    const sw=document.getElementById('stat-wallet');if(sw)sw.textContent='₹'+totalWallet;
     renderUsers(allUsersCache);
   } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed. Check Firebase Rules.</p><button class="btn btn-outline" style="width:auto;padding:8px 16px;margin-top:10px" onclick="loadAUsers()">Retry</button></div>';}
 }
@@ -2752,6 +2729,7 @@ function filterUsers() {
 
 function renderUsers(list) {
   const el=document.getElementById('a-users-list');
+  if(!el) return;
   const lbl=document.getElementById('user-count-label');
   if(lbl) lbl.textContent=`Showing ${list.length} user${list.length!==1?'s':''}`;
   if(!list.length){el.innerHTML='<div class="empty"><i class="fas fa-search"></i><p>No users match</p></div>';return;}
@@ -2789,6 +2767,7 @@ function renderUsers(list) {
 
 async function loadADeposits() {
   const el=document.getElementById('a-dep-list');
+  if(!el) return;
   el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
   try {
     const snap=await db.ref('depositRequests').orderByChild('status').equalTo('pending').once('value');
@@ -2818,6 +2797,7 @@ async function loadADeposits() {
 
 async function loadAWithdrawals() {
   const el=document.getElementById('a-wd-list');
+  if(!el) return;
   el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
   try {
     const snap=await db.ref('withdrawalRequests').orderByChild('status').equalTo('pending').once('value');
@@ -2846,29 +2826,36 @@ async function loadAWithdrawals() {
 
 async function loadATournaments() {
   const el=document.getElementById('a-t-list');
+  if(!el) return;
   el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
   try {
     const snap=await db.ref('tournaments').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments</p></div>';return;}
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments yet.<br>Create one above!</p></div>';return;}
     let html='';
     snap.forEach(c=>{
       const t=c.val(),tid=c.key;
-      html+=`<div class="tacard">
-        ${t.thumbnail?`<img class="ta-thumb" src="${t.thumbnail}" onerror="this.style.display='none'">`:''}
-        <div class="ta-body">
-          <div>
-            <div class="ta-name">${t.name}${t.featured?'<span class="adm-badge" style="color:var(--gold);border-color:var(--gold)">⭐</span>':''}</div>
-            <div class="ta-meta">${t.map} · ${(t.mode||'solo').toUpperCase()} · ₹${t.entryFee}<br>Prize: ${t.prizePool} · ${t.registered||0}/${t.maxPlayers} players${t.roomId?'<br><span style="color:var(--cyan)">🔐 Room set</span>':''}</div>
+      const isTicket=t.entryType==='ticket';
+      const feeDisp=isTicket?'🎫 Ticket':(t.entryFee==0?'FREE':'₹'+t.entryFee);
+      const roomSetInfo=t.roomSetAt?`<div style="font-size:.62rem;color:var(--warn);margin-top:2px">⚠️ Auto-delete: ${Math.max(0,Math.ceil((60*60*1000-(Date.now()-t.roomSetAt))/60000))}min remaining</div>`:'';
+      html+=`<div style="background:var(--card);border:1px solid ${t.featured?'var(--gold)':isTicket?'var(--purple)':'var(--border)'};border-radius:11px;overflow:hidden;margin-bottom:9px">
+        ${t.thumbnail?`<img src="${t.thumbnail}" style="width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--card2)" onerror="this.style.display='none'">`:''}
+        <div style="padding:11px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Orbitron,monospace;font-size:.82rem;font-weight:700">${t.name}${t.featured?' ⭐':''}${isTicket?' 🎫':''}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:3px;font-family:Rajdhani,sans-serif;line-height:1.5">${t.map||'Bermuda'} · ${(t.mode||'solo').toUpperCase()} · ${feeDisp}<br>Prize: ${t.prizePool||'—'} · Players: ${t.registered||0}/${t.maxPlayers||32}${t.roomId?'<br><span style="color:var(--cyan)">🔐 Room set</span>':''}</div>
+            ${roomSetInfo}
           </div>
-          <div class="ta-acts">
-            <button class="sm-btn edit" onclick="openEditT('${tid}')"><i class="fas fa-edit"></i> Edit</button>
-            <button class="sm-btn blk" onclick="deleteT('${tid}')"><i class="fas fa-trash"></i> Del</button>
+          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+            <button onclick="openEditT('${tid}')" style="background:var(--blue1);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-edit"></i></button>
+            <button onclick="openSetRoomModal('${tid}','${(t.name||'').replace(/'/g,"\\'")}')" style="background:var(--warn);border:none;border-radius:7px;color:#000;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-key"></i></button>
+            <button onclick="deleteT('${tid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
           </div>
         </div>
+        ${t.players?`<div style="padding:0 11px 11px"><div style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;margin-bottom:6px">JOINED PLAYERS (${t.registered||0})</div>${Object.values(t.players).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem">${p.name||'?'} ${p.username?'<span style="color:var(--muted)">@'+p.username+'</span>':''}</div></div><button onclick="openWinnerRedeem('${Object.entries(t.players||{}).find(([k,v])=>v.name===p.name)?.[0]||''}','${(p.name||'').replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}') style="background:var(--gold);border:none;border-radius:6px;color:#000;padding:3px 8px;font-size:.65rem;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer">🏆 Give Prize</button></div>`).join('')}</div>`:''}
       </div>`;
     });
     el.innerHTML=html;
-  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+  } catch(e){console.error(e);el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load. Check Firebase.</p></div>';}
 }
 
 async function loadALive() {
@@ -2876,10 +2863,10 @@ async function loadALive() {
     const snap=await db.ref('liveStream').once('value');
     if(snap.exists()){
       const l=snap.val();
-      document.getElementById('live-toggle-cb').checked=l.active||false;
-      document.getElementById('live-url-inp').value=l.url||'';
-      document.getElementById('live-title-inp').value=l.title||'';
-      document.getElementById('live-viewers-inp').value=l.viewers||'';
+      const cb=document.getElementById('live-toggle-cb');if(cb)cb.checked=l.active||false;
+      const ui=document.getElementById('live-url-inp');if(ui)ui.value=l.url||'';
+      const ti=document.getElementById('live-title-inp');if(ti)ti.value=l.title||'';
+      const vi=document.getElementById('live-viewers-inp');if(vi)vi.value=l.viewers||'';
     }
   } catch(e){}
 }
@@ -2903,30 +2890,29 @@ async function saveLiveSettings() {
 }
 
 async function createTournament() {
-  const name=document.getElementById('t-name').value.trim();
-  const fee=parseInt(document.getElementById('t-fee').value)||0;
-  const prize=document.getElementById('t-prize').value.trim();
-  const map=document.getElementById('t-map').value.trim();
-  const max=parseInt(document.getElementById('t-max').value)||32;
-  const mode=document.getElementById('t-mode').value||'solo';
-  const startTimeVal=document.getElementById('t-starttime').value;
-  const rulesRaw=document.getElementById('t-rules').value.trim();
+  const name=document.getElementById('t-name')?.value.trim();
+  const fee=parseInt(document.getElementById('t-fee')?.value)||0;
+  const prize=document.getElementById('t-prize')?.value.trim();
+  const map=document.getElementById('t-map')?.value.trim();
+  const max=parseInt(document.getElementById('t-max')?.value)||32;
+  const mode=document.getElementById('t-mode')?.value||'solo';
+  const startTimeVal=document.getElementById('t-starttime')?.value;
+  const rulesRaw=document.getElementById('t-rules')?.value.trim();
   const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
   const startTime=startTimeVal?new Date(startTimeVal).getTime():null;
-  const featured=document.getElementById('t-featured').value==='1';
+  const featured=document.getElementById('t-featured')?.value==='1';
+  const entryType=document.getElementById('t-entry-type')?.value||'normal';
   const thumb=getThumbValue('t');
-  if(!name||!prize||!map){showToast('Fill required fields','error');return;}
+  if(!name||!prize||!map){showToast('Name, Prize & Map required!','error');return;}
   try {
     const key=db.ref('tournaments').push().key;
-    await db.ref('tournaments/'+key).set({name,entryFee:fee,prizePool:prize,map,maxPlayers:max,registered:0,thumbnail:thumb,mode,startTime,rules,featured,createdAt:Date.now()});
+    await db.ref('tournaments/'+key).set({name,entryFee:entryType==='ticket'?0:fee,prizePool:prize,map,maxPlayers:max,registered:0,thumbnail:thumb,mode,startTime,rules,featured,entryType,createdAt:Date.now()});
     ['t-name','t-fee','t-prize','t-map','t-max','t-thumb-url','t-thumb-data','t-rules'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    document.getElementById('t-img-preview').classList.remove('show');
+    const prev=document.getElementById('t-img-preview');if(prev)prev.classList.remove('show');
     const area=document.getElementById('t-img-area');
-    area.classList.remove('has-img');
-    area.querySelector('p').innerHTML='Tap to upload image<br><span style="font-size:.65rem;opacity:.6">PNG, JPG, WEBP · 16:9</span>';
-    area.querySelector('i').style.color='';
-    sendGlobalNotif('🏆 New Tournament!',`"${name}" is now open — Entry: ${fee===0?'FREE':'₹'+fee}`,'tournament');
-    showToast('Tournament created! 🏆','success');
+    if(area){area.classList.remove('has-img');const p=area.querySelector('p');if(p)p.innerHTML='Tap to upload image<br><span style="font-size:.65rem;opacity:.6">PNG, JPG, WEBP</span>';const ic=area.querySelector('i');if(ic)ic.style.color='';}
+    sendGlobalNotif('🏆 New Tournament!',`"${name}" is open! Entry: ${entryType==='ticket'?'🎫 Ticket':fee===0?'FREE':'₹'+fee}`,'tournament');
+    showToast('Tournament created! ✓','success');
     loadATournaments();
   } catch(e){console.error(e);showToast('Error creating','error');}
 }
@@ -2945,6 +2931,7 @@ async function openEditT(tid) {
   document.getElementById('et-roomid').value=t.roomId||'';
   document.getElementById('et-roompwd').value=t.roomPassword||'';
   document.getElementById('et-featured').value=t.featured?'1':'0';
+  const etEl=document.getElementById('et-entry-type');if(etEl)etEl.value=t.entryType||'normal';
   if(t.startTime){const d=new Date(t.startTime);const local=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('et-starttime').value=local;}
   else document.getElementById('et-starttime').value='';
   if(t.thumbnail){document.getElementById('et-img-preview').src=t.thumbnail;document.getElementById('et-img-preview').classList.add('show');document.getElementById('et-thumb-data').value=t.thumbnail;}
@@ -2960,6 +2947,7 @@ async function saveTEdit() {
   const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
   const roomId=document.getElementById('et-roomid').value.trim();
   const roomPassword=document.getElementById('et-roompwd').value.trim();
+  const entryType=document.getElementById('et-entry-type')?.value||'normal';
   const upd={
     name:document.getElementById('et-name').value.trim(),
     entryFee:parseInt(document.getElementById('et-fee').value)||0,
@@ -2969,12 +2957,13 @@ async function saveTEdit() {
     mode:document.getElementById('et-mode').value||'solo',
     rules,thumbnail:thumb,
     startTime:startTimeVal?new Date(startTimeVal).getTime():null,
-    roomId,roomPassword,
+    roomId,roomPassword,entryType,
     featured:document.getElementById('et-featured').value==='1'
   };
+  if(roomId&&roomPassword&&!upd.roomSetAt) upd.roomSetAt=Date.now();
   try {
     await db.ref('tournaments/'+tid).update(upd);
-    if(roomId&&roomPassword) sendTournamentNotif(tid,upd.name,`Room credentials set! Check My Matches now.`);
+    if(roomId&&roomPassword) sendTournamentNotif(tid,upd.name,'Room credentials set! Check My Matches. 🔐');
     closeModal('modal-edit-t');
     showToast('Updated! ✓','success');
     loadATournaments();
@@ -3154,20 +3143,7 @@ function showToast(msg,type='') {
   toastT=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
-// ── MODALS ──
-function openModal(id){const el=document.getElementById(id);if(el)el.classList.add('show');}
-function closeModal(id){const el=document.getElementById(id);if(el)el.classList.remove('show');}
-document.addEventListener('click',e=>{
-  if(e.target.classList.contains('modal-overlay')) e.target.classList.remove('show');
-});
-
-// ── INIT FIREBASE (duplicate removed) ──
-
-// ─────────────────────────────────────────
-// NEW FEATURE FUNCTIONS
-// ─────────────────────────────────────────
-
-// ── AUTO DELETE: Room set hone ke 1hr baad tournament delete ──
+// ── AUTO DELETE (duplicate fix) ──
 async function checkAutoDeleteTournaments() {
   try {
     const snap = await db.ref('tournaments').once('value');
@@ -3177,7 +3153,7 @@ async function checkAutoDeleteTournaments() {
       const t = c.val(), tid = c.key;
       if(t.roomId && t.roomSetAt) {
         const elapsed = now - t.roomSetAt;
-        if(elapsed >= 60*60*1000) { // 1 hour
+        if(elapsed >= 60*60*1000) {
           db.ref('tournaments/'+tid).remove().catch(()=>{});
         }
       }
@@ -3185,38 +3161,310 @@ async function checkAutoDeleteTournaments() {
   } catch(e){}
 }
 
-// ── USERNAME SYSTEM ──
-async function checkUsernameAvailable(username) {
-  if(!username || username.length < 3) return false;
-  const snap = await db.ref('usernames/'+username).once('value');
-  return !snap.exists();
+// ── WINNER REDEEM ──
+function openWinnerRedeem(uid,name,tournamentName) {
+  document.getElementById('wr-uid').value=uid;
+  document.getElementById('wr-username').value=name;
+  document.getElementById('wr-tournament-name').value=tournamentName||'';
+  document.getElementById('wr-user-info').innerHTML=`<i class="fas fa-user" style="color:var(--cyan)"></i> <b>${name}</b><br><span style="color:var(--muted);font-size:.78rem">UID: ${uid}</span>`;
+  updateWRForm();
+  openModal('modal-winner-redeem');
 }
 
-// ── NAVTO UPDATE ──
-const _origNavTo = typeof navTo !== 'undefined' ? navTo : null;
-function navTo(page) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const pg=document.getElementById('page-'+page);
-  if(pg) pg.classList.add('active');
-  const nav=document.getElementById('nav-'+page);
-  if(nav) nav.classList.add('active');
-  const cont=document.getElementById('content');
-  if(cont) cont.scrollTop=0;
-  const np=document.getElementById('notif-panel');
-  if(np) np.classList.remove('show');
-  if(page==='home'){if(typeof loadTournaments==='function')loadTournaments();if(typeof loadLiveSection==='function')loadLiveSection();}
-  if(page==='matches'&&typeof loadMatches==='function') loadMatches();
-  if(page==='wallet'&&typeof loadWallet==='function') loadWallet();
-  if(page==='leaderboard'&&typeof loadLeaderboard==='function') loadLeaderboard();
-  if(page==='referral'&&typeof loadReferral==='function') loadReferral();
-  if(page==='profile'&&typeof loadProfile==='function') loadProfile();
-  if(page==='support'&&typeof loadSupportLinks==='function') loadSupportLinks();
-  if(page==='spin') loadSpinWheel();
-  if(page==='store') loadStore();
+function updateWRForm() {
+  const type=document.getElementById('wr-prize-type')?.value;
+  const cashFields=document.getElementById('wr-cash-fields');
+  const redeemFields=document.getElementById('wr-redeem-fields');
+  if(cashFields) cashFields.style.display=type==='cash'?'block':'none';
+  if(redeemFields) redeemFields.style.display=type==='redeem'?'block':'none';
 }
 
-// ── DEFAULT WHEEL PRIZES (admin override via Firebase) ──
+async function giveWinnerPrize() {
+  const uid=document.getElementById('wr-uid')?.value;
+  const userName=document.getElementById('wr-username')?.value;
+  const type=document.getElementById('wr-prize-type')?.value;
+  const tName=document.getElementById('wr-tournament-name')?.value||'Tournament';
+  if(!uid){showToast('Error: No user selected','error');return;}
+  try {
+    if(type==='cash'){
+      const amount=parseInt(document.getElementById('wr-amount')?.value)||0;
+      if(!amount||amount<1){showToast('Enter valid prize amount','error');return;}
+      const cur=(await db.ref('users/'+uid+'/wallet').once('value')).val()||0;
+      const newBal=cur+amount;
+      const txKey=db.ref().push().key;
+      const upd={};
+      upd['users/'+uid+'/wallet']=newBal;
+      upd['users/'+uid+'/transactions/'+txKey]={type:'Match Prize',amount,date:Date.now(),status:'completed',desc:'🏆 Winner prize: '+tName};
+      const nk=db.ref().push().key;
+      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Prize!',body:'₹'+amount+' added for winning '+tName+'! Congrats!',type:'deposit',date:Date.now(),read:false};
+      await db.ref().update(upd);
+      closeModal('modal-winner-redeem');
+      showToast('₹'+amount+' prize given to winner! ✓','success');
+    } else {
+      const code=document.getElementById('wr-redeem-code')?.value.trim();
+      const desc=document.getElementById('wr-redeem-desc')?.value.trim();
+      if(!code){showToast('Enter redeem code!','error');return;}
+      const pKey=db.ref().push().key;
+      const nk=db.ref().push().key;
+      const upd={};
+      upd['users/'+uid+'/purchases/'+pKey]={itemId:'winner-prize',name:'Winner Prize: '+tName,type:'redeem',price:0,redeemCode:code,redeemDesc:desc||'',purchasedAt:Date.now()};
+      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Redeem Code!',body:'Aapne '+tName+' jeeta! Redeem code: '+code,type:'deposit',date:Date.now(),read:false};
+      await db.ref().update(upd);
+      closeModal('modal-winner-redeem');
+      showToast('Redeem code sent to winner! ✓','success');
+    }
+    loadAUsers();
+  } catch(e){showToast('Error giving prize','error');}
+}
+
+// ── STORE ──
+let pendingBuyData=null;
+
+function switchStoreTab(tab,btn) {
+  document.querySelectorAll('.stab').forEach(b=>{b.style.background='transparent';b.style.color='var(--muted)';});
+  if(btn){btn.style.background='linear-gradient(135deg,#1b5e20,var(--success))';btn.style.color='#fff';}
+  ['coupons','tickets','mine'].forEach(t=>{
+    const el=document.getElementById('store-sec-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+  });
+  if(tab==='coupons') loadStoreCoupons();
+  if(tab==='tickets') loadStoreTickets();
+  if(tab==='mine') loadMyItems();
+}
+
+async function loadStore() {
+  switchStoreTab('coupons',document.querySelector('.stab'));
+}
+
+async function loadStoreCoupons() {
+  const el=document.getElementById('store-coupons-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').orderByChild('type').equalTo('coupon').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-tag"></i><p>Koi coupons nahi hain abhi.</p></div>';return;}
+    let html='';
+    snap.forEach(c=>{
+      const it=c.val(),sid=c.key;
+      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎟️';
+      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
+        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
+          ${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}
+          ${it.discount?`<div style="font-size:.68rem;color:var(--success);margin-top:2px">Discount: ${it.discount}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
+          <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#1b5e20,var(--success));border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+        </div>
+      </div>`;
+    });
+    el.innerHTML=html||'<div class="empty"><i class="fas fa-tag"></i><p>No coupons available</p></div>';
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+async function loadStoreTickets() {
+  const el=document.getElementById('store-tickets-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').orderByChild('type').equalTo('ticket').once('value');
+    let html='';
+    if(!snap.exists()){
+      html=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.4);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:56px;height:56px;border-radius:12px;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">🎫</div>
+        <div style="flex:1"><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">Tournament Ticket</div><div style="font-size:.68rem;color:var(--muted);margin-top:2px">Ticket Tournament join karne ke liye</div></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹50</div>
+          <button onclick="buyDefaultTicket()" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+        </div>
+      </div>`;
+    } else {
+      snap.forEach(c=>{
+        const it=c.val(),sid=c.key;
+        const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎫';
+        html+=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.3);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
+          <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
+          <div style="flex:1;min-width:0"><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
+            <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
+          </div>
+        </div>`;
+      });
+    }
+    el.innerHTML=html;
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+async function buyDefaultTicket(){
+  pendingBuyData={id:'default',name:'Tournament Ticket',price:50,type:'ticket'};
+  showBuyConfirm();
+}
+
+async function openBuyItem(sid) {
+  try {
+    const snap=await db.ref('storeItems/'+sid).once('value');
+    if(!snap.exists()){showToast('Item not found','error');return;}
+    pendingBuyData={id:sid,...snap.val()};
+    showBuyConfirm();
+  } catch(e){showToast('Error','error');}
+}
+
+function showBuyConfirm() {
+  if(!pendingBuyData) return;
+  const d=pendingBuyData;
+  const bal=userData?.wallet||0;
+  const iconHtml=d.banner?`<img src="${d.banner}" style="width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;margin-bottom:12px">`:(d.icon?`<div style="text-align:center;margin-bottom:12px"><img src="${d.icon}" style="width:80px;height:80px;border-radius:12px;object-fit:cover"></div>`:`<div style="text-align:center;font-size:3rem;margin-bottom:12px">${d.type==='ticket'?'🎫':'🎟️'}</div>`);
+  document.getElementById('buy-confirm-content').innerHTML=`
+    ${iconHtml}
+    <div style="font-family:Orbitron,monospace;font-size:.92rem;font-weight:700;text-align:center;margin-bottom:4px">${d.name}</div>
+    ${d.description?`<div style="font-family:Rajdhani,sans-serif;font-size:.78rem;color:var(--muted);text-align:center;margin-bottom:10px">${d.description}</div>`:''}
+    <div style="background:rgba(21,101,192,.1);border:1px solid rgba(21,101,192,.3);border-radius:11px;padding:14px;text-align:center;margin:12px 0">
+      <div style="font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--muted)">Price</div>
+      <div style="font-family:Orbitron,monospace;font-size:1.5rem;font-weight:900;color:var(--cyan)">₹${d.price}</div>
+      <div style="display:flex;justify-content:space-between;font-family:Rajdhani,sans-serif;font-size:.8rem;margin-top:6px">
+        <span style="color:var(--muted)">Balance: <b style="color:var(--gold)">₹${bal}</b></span>
+        <span>After: <b style="color:${bal-d.price<0?'var(--danger)':'var(--warn)'}">₹${bal-d.price}</b></span>
+      </div>
+    </div>`;
+  openModal('modal-buy-confirm');
+}
+
+async function confirmBuyItem() {
+  if(!pendingBuyData){closeModal('modal-buy-confirm');return;}
+  const d=pendingBuyData;
+  if((userData?.wallet||0)<d.price){showToast('Balance kam hai!','error');closeModal('modal-buy-confirm');return;}
+  try {
+    const newBal=(userData.wallet||0)-d.price;
+    const upd={};
+    upd['users/'+currentUser.uid+'/wallet']=newBal;
+    const txKey=db.ref().push().key;
+    upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Store Purchase',amount:-d.price,date:Date.now(),status:'completed',desc:'Bought: '+d.name};
+    if(d.type==='ticket') upd['users/'+currentUser.uid+'/tickets']=(userData.tickets||0)+1;
+    const pKey=db.ref().push().key;
+    let code='';
+    if(d.type==='coupon') code=d.couponCode||('SYN'+Math.random().toString(36).substr(2,8).toUpperCase());
+    upd['users/'+currentUser.uid+'/purchases/'+pKey]={itemId:d.id,name:d.name,type:d.type,price:d.price,couponCode:code,purchasedAt:Date.now()};
+    await db.ref().update(upd);
+    userData.wallet=newBal;
+    if(d.type==='ticket') userData.tickets=(userData.tickets||0)+1;
+    closeModal('modal-buy-confirm');
+    pendingBuyData=null;
+    if(d.type==='ticket') showToast('🎫 Ticket mila! Ab ticket tournament join karo.','success');
+    else if(code) showToast('🎟️ Coupon: '+code,'success');
+    else showToast('Purchase complete! ✓','success');
+  } catch(e){showToast('Purchase failed','error');}
+}
+
+async function loadMyItems() {
+  const el=document.getElementById('my-store-items');
+  if(!el||!currentUser) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('users/'+currentUser.uid+'/purchases').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><p>Koi purchases nahi hain.</p></div>';return;}
+    const items=Object.entries(snap.val()).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.purchasedAt-a.purchasedAt);
+    el.innerHTML=items.map(it=>`<div style="background:linear-gradient(135deg,rgba(0,230,118,.05),var(--card));border:1px solid rgba(0,230,118,.2);border-radius:12px;padding:14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:1.3rem">${it.type==='ticket'?'🎫':'🎟️'}</span>
+        <div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div><div style="font-size:.65rem;color:var(--muted)">${new Date(it.purchasedAt).toLocaleDateString('en-IN')} · ₹${it.price}</div></div>
+      </div>
+      ${it.couponCode?`<div style="font-family:Orbitron,monospace;font-size:.88rem;color:var(--success);letter-spacing:3px;cursor:pointer" onclick="copyText('${it.couponCode}','Coupon Code')">${it.couponCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div>`:''}
+      ${it.type==='ticket'?'<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,77,255,.15);border:1px solid rgba(124,77,255,.4);border-radius:10px;padding:3px 10px;font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--purple);font-weight:700"><i class="fas fa-ticket-alt"></i>&nbsp;Tournament Ticket</div>':''}
+      ${it.redeemCode?`<div style="margin-top:6px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--muted);font-family:Rajdhani,sans-serif">🏆 Winner Redeem Code</div><div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);cursor:pointer" onclick="copyText('${it.redeemCode}','Redeem Code')">${it.redeemCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div><div style="font-size:.65rem;color:var(--muted)">${it.redeemDesc||''}</div></div>`:''}
+    </div>`).join('');
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+function handleIconUpload(input) {
+  const file=input.files[0];
+  if(!file) return;
+  if(file.size>2*1024*1024){showToast('Max 2MB!','warn');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    const prev=document.getElementById('si-icon-preview');
+    const dataEl=document.getElementById('si-icon-data');
+    const area=document.getElementById('si-icon-area');
+    if(prev){prev.src=data;prev.style.display='block';}
+    if(dataEl) dataEl.value=data;
+    if(area) area.style.borderColor='var(--success)';
+    showToast('Icon uploaded! ✓','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleBannerUpload(input) {
+  const file=input.files[0];
+  if(!file) return;
+  if(file.size>3*1024*1024){showToast('Max 3MB!','warn');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    const prev=document.getElementById('si-banner-preview');
+    const dataEl=document.getElementById('si-banner-data');
+    const area=document.getElementById('si-banner-area');
+    if(prev){prev.src=data;prev.style.display='block';}
+    if(dataEl) dataEl.value=data;
+    if(area) area.style.borderColor='var(--success)';
+    showToast('Banner uploaded! ✓','success');
+  };
+  reader.readAsDataURL(file);
+}
+
+async function createStoreItem() {
+  const type=document.getElementById('si-type')?.value||'coupon';
+  const name=document.getElementById('si-name')?.value.trim();
+  const desc=document.getElementById('si-desc')?.value.trim();
+  const price=parseInt(document.getElementById('si-price')?.value)||0;
+  const couponCode=document.getElementById('si-coupon-code')?.value.trim();
+  const discount=document.getElementById('si-discount')?.value.trim();
+  const icon=document.getElementById('si-icon-data')?.value||'';
+  const banner=document.getElementById('si-banner-data')?.value||'';
+  if(!name||!price){showToast('Name aur price required!','error');return;}
+  try {
+    const key=db.ref('storeItems').push().key;
+    await db.ref('storeItems/'+key).set({type,name,description:desc,price,couponCode:couponCode||'',discount:discount||'',icon,banner,createdAt:Date.now()});
+    ['si-name','si-desc','si-price','si-coupon-code','si-discount','si-icon-data','si-banner-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const ip=document.getElementById('si-icon-preview');if(ip)ip.style.display='none';
+    const bp=document.getElementById('si-banner-preview');if(bp)bp.style.display='none';
+    const ia=document.getElementById('si-icon-area');if(ia)ia.style.borderColor='var(--border)';
+    const ba=document.getElementById('si-banner-area');if(ba)ba.style.borderColor='var(--border)';
+    showToast('Store item added! ✓','success');
+    loadAStoreItems();
+  } catch(e){showToast('Error adding item','error');}
+}
+
+async function loadAStoreItems() {
+  const el=document.getElementById('a-store-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const snap=await db.ref('storeItems').once('value');
+    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-store"></i><p>No items yet</p></div>';return;}
+    let html='';
+    snap.forEach(c=>{
+      const it=c.val(),sid=c.key;
+      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:(it.type==='ticket'?'🎫':'🎟️');
+      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:10px">
+        <div style="width:50px;height:50px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${iconHtml}</div>
+        <div style="flex:1;min-width:0"><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.85rem">${it.name}</div><div style="font-size:.65rem;color:var(--muted)">₹${it.price} · ${it.type} ${it.couponCode?'· Code: '+it.couponCode:''}</div></div>
+        <button onclick="deleteStoreItem('${sid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 12px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
+      </div>`;
+    });
+    el.innerHTML=html;
+  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
+}
+
+async function deleteStoreItem(sid) {
+  if(!confirm('Delete this store item?')) return;
+  try{await db.ref('storeItems/'+sid).remove();showToast('Item deleted','warn');loadAStoreItems();}
+  catch(e){showToast('Error','error');}
+}
+
+// ── SPIN WHEEL ──
 const DEFAULT_PRIZES=[
   {label:'Better Luck',value:0,prob:35,color:'#1b3c6e',type:'nothing'},
   {label:'S$ 2',value:2,prob:22,color:'#1565c0',type:'cash'},
@@ -3229,9 +3477,8 @@ const DEFAULT_PRIZES=[
 ];
 let spinPrizes=DEFAULT_PRIZES;
 let spinIsSpinning=false;
-
-// ── SPIN WHEEL DRAW - Neon Style ──
 const NEON_COLORS=['#7c4dff','#00e5ff','#f50057','#ffd700','#00e676','#ff6d00','#1565c0','#e040fb'];
+
 function drawWheel(angle=0) {
   const canvas=document.getElementById('spin-canvas');
   if(!canvas) return;
@@ -3241,68 +3488,43 @@ function drawWheel(angle=0) {
   if(!N) return;
   const sliceAngle=(2*Math.PI)/N;
   ctx.clearRect(0,0,W,H);
-
-  // Outer dark ring
   ctx.beginPath();ctx.arc(cx,cy,r+6,0,2*Math.PI);
   ctx.fillStyle='#0a0a1a';ctx.fill();
-
   let start=angle;
   spinPrizes.forEach((p,i)=>{
     const col=p.color||NEON_COLORS[i%NEON_COLORS.length];
-    // Slice gradient
     const grad=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
-    grad.addColorStop(0,col+'88');
-    grad.addColorStop(1,col+'dd');
+    grad.addColorStop(0,col+'88');grad.addColorStop(1,col+'dd');
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+sliceAngle);
     ctx.fillStyle=grad;ctx.fill();
-
-    // Neon border between slices
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+sliceAngle);
     ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=2;ctx.stroke();
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,start,start+sliceAngle);
     ctx.strokeStyle=col+'55';ctx.lineWidth=1;ctx.stroke();
-
-    // Label
-    ctx.save();
-    ctx.translate(cx,cy);
-    ctx.rotate(start+sliceAngle/2);
-    const midR=r*0.6;
-
-    // Type icon at inner
-    ctx.textAlign='right';
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(start+sliceAngle/2);
     const isCash=p.type==='cash'&&p.value>0;
     const isTicket=p.type==='ticket';
-
-    // Prize label - split into two lines if cash
     ctx.shadowBlur=8;ctx.shadowColor='rgba(0,0,0,.95)';
     if(isCash){
-      // "S$" prefix for real cash with Synex branding
-      ctx.fillStyle='#fff';
-      ctx.font=`900 ${N>7?'8.5px':'10px'} "Orbitron",monospace`;
+      ctx.fillStyle='#fff';ctx.font=`900 ${N>7?'8.5px':'10px'} "Orbitron",monospace`;
       ctx.fillText('S$',r-12,N>7?-3:0);
       ctx.font=`700 ${N>7?'9px':'11px'} "Exo 2",sans-serif`;
       ctx.fillStyle=col==='#ffd700'?'#fff':'rgba(255,255,255,.95)';
       ctx.fillText(p.value,r-12,N>7?7:12);
     } else if(isTicket){
-      ctx.fillStyle='#fff';
-      ctx.font=`900 ${N>7?'8px':'10px'} "Orbitron",monospace`;
+      ctx.fillStyle='#fff';ctx.font=`900 ${N>7?'8px':'10px'} "Orbitron",monospace`;
       ctx.fillText('🎫',r-14,4);
     } else {
-      ctx.fillStyle='rgba(255,255,255,.7)';
-      ctx.font=`700 ${N>7?'7.5px':'9px'} "Rajdhani",sans-serif`;
+      ctx.fillStyle='rgba(255,255,255,.7)';ctx.font=`700 ${N>7?'7.5px':'9px'} "Rajdhani",sans-serif`;
       ctx.fillText(p.label,r-10,4);
     }
     ctx.restore();
     start+=sliceAngle;
   });
-
-  // Arc border - neon glow
   ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);
   ctx.strokeStyle='rgba(124,77,255,.8)';ctx.lineWidth=3;
   ctx.shadowBlur=15;ctx.shadowColor='rgba(124,77,255,.8)';
   ctx.stroke();ctx.shadowBlur=0;
-
-  // Center circle - Synex branded
   ctx.beginPath();ctx.arc(cx,cy,22,0,2*Math.PI);
   const cGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,22);
   cGrad.addColorStop(0,'#1565c0');cGrad.addColorStop(1,'#030812');
@@ -3310,13 +3532,10 @@ function drawWheel(angle=0) {
   ctx.strokeStyle='rgba(0,229,255,.9)';ctx.lineWidth=2;
   ctx.shadowBlur=12;ctx.shadowColor='rgba(0,229,255,.7)';
   ctx.stroke();ctx.shadowBlur=0;
-  // S letter in center
   ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.font='900 14px "Orbitron",monospace';
   ctx.shadowBlur=6;ctx.shadowColor='rgba(0,229,255,.8)';
   ctx.fillText('S',cx,cy);ctx.shadowBlur=0;ctx.textBaseline='alphabetic';
-
-  // Update prizes legend
   renderSpinLegend();
 }
 
@@ -3384,20 +3603,14 @@ async function doSpin() {
   if(btn){btn.disabled=true;btn.style.opacity='.5';}
   const res=document.getElementById('spin-result-box');
   if(res) res.style.display='none';
-
-  // Pick prize using prob weights (admin controls win chance via prob)
   const total=spinPrizes.reduce((s,p)=>s+(p.prob||1),0);
   let rand=Math.random()*total,cum=0,chosen=0;
   for(let i=0;i<spinPrizes.length;i++){cum+=spinPrizes[i].prob||1;if(rand<=cum){chosen=i;break;}}
-
-  // Target angle — equal visual slices, so each slice = 2PI/N
   const N=spinPrizes.length;
   const sliceAngle=(2*Math.PI)/N;
-  // Land at center of chosen slice (pointer at top = -PI/2)
   const targetAngle=5*2*Math.PI+(2*Math.PI - chosen*sliceAngle - sliceAngle/2 - Math.PI/2);
   const duration=4500;
   const startTime=performance.now();
-
   function animate(now){
     const elapsed=now-startTime;
     const progress=Math.min(elapsed/duration,1);
@@ -3420,13 +3633,10 @@ async function awardSpinPrize(prize,cost) {
     upd['users/'+currentUser.uid+'/wallet']=newBal;
     const txKey=db.ref().push().key;
     upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Spin Cost',amount:-cost,date:Date.now(),status:'completed',desc:'Spin the Wheel'};
-
     let winMsg='',winSubMsg='';
-    // Award Synex Points on every spin
     const ptsEarned=prize.type==='nothing'?5:prize.type==='ticket'?15:Math.max(5,Math.floor(prize.value/2));
     const newPts=Math.min(100,(userData.synexPoints||0)+ptsEarned);
     upd['users/'+currentUser.uid+'/synexPoints']=newPts;
-
     if(prize.type==='cash'&&prize.value>0){
       newBal+=prize.value;
       upd['users/'+currentUser.uid+'/wallet']=newBal;
@@ -3442,13 +3652,11 @@ async function awardSpinPrize(prize,cost) {
     }
     userData.synexPoints=newPts;
     updateSynexPointsUI(newPts);
-
     const histKey=db.ref().push().key;
     upd['spinHistory/'+currentUser.uid+'/'+histKey]={label:prize.label,type:prize.type,value:prize.value,date:Date.now()};
     await db.ref().update(upd);
     userData.wallet=newBal;
     if(prize.type==='ticket') userData.tickets=(userData.tickets||0)+1;
-
     const res=document.getElementById('spin-result-box');
     if(res){
       res.style.display='block';res.style.animation='popIn .4s ease';
@@ -3525,19 +3733,15 @@ function addWheelPrize() {
   const prob=parseInt(document.getElementById('wp-prob')?.value)||10;
   const color=document.getElementById('wp-color')?.value||'#1565c0';
   const type=document.getElementById('wp-type')?.value||'cash';
-  const image=document.getElementById('wp-image')?.value.trim()||'';
   if(!label){showToast('Label required!','error');return;}
   if(prob<1||prob>100){showToast('Probability 1-100 hona chahiye!','error');return;}
-  adminWheelPrizes.push({label,value,prob,color,type,image});
+  adminWheelPrizes.push({label,value,prob,color,type});
   renderAdminWheelPrizes();
-  ['wp-label','wp-value','wp-prob','wp-image'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['wp-label','wp-value','wp-prob'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   showToast('Prize added! Save karna mat bhoolo.','success');
 }
 
-function removeWheelPrize(idx) {
-  adminWheelPrizes.splice(idx,1);
-  renderAdminWheelPrizes();
-}
+function removeWheelPrize(idx) { adminWheelPrizes.splice(idx,1); renderAdminWheelPrizes(); }
 
 async function saveWheelSettings() {
   const cost=parseInt(document.getElementById('wheel-cost-inp')?.value)||10;
@@ -3554,438 +3758,19 @@ async function loadAdminSpinHistory() {
   if(!el) return;
   el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
   try {
-    // Load recent spins from all users - check spinHistory node
     const snap=await db.ref('spinHistory').limitToLast(5).once('value');
     if(!snap.exists()){el.innerHTML='<div style="color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.8rem;text-align:center;padding:12px">No spins yet</div>';return;}
     let rows=[];
-    snap.forEach(userSnap=>{
-      const uid=userSnap.key;
-      userSnap.forEach(s=>{rows.push({...s.val(),uid,_k:s.key});});
-    });
+    snap.forEach(userSnap=>{const uid=userSnap.key;userSnap.forEach(s=>{rows.push({...s.val(),uid,_k:s.key});});});
     rows.sort((a,b)=>b.date-a.date);
     el.innerHTML=rows.slice(0,20).map(r=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
-      <div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem">${r.label}</div>
-      <div style="font-size:.65rem;color:var(--muted)">${r.uid.substring(0,8)}... · ${timeAgo(r.date)}</div></div>
+      <div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.82rem">${r.label}</div><div style="font-size:.65rem;color:var(--muted)">${r.uid.substring(0,8)}... · ${timeAgo(r.date)}</div></div>
       <div style="font-family:Orbitron,monospace;font-size:.75rem;color:${r.type==='cash'?'var(--gold)':r.type==='ticket'?'var(--purple)':'var(--muted)'}">${r.type==='cash'?'+₹'+r.value:r.type==='ticket'?'+🎫':'—'}</div>
     </div>`).join('');
   } catch(e){el.innerHTML='<div style="color:var(--muted);font-family:Rajdhani,sans-serif;font-size:.8rem;text-align:center;padding:12px">Failed to load</div>';}
 }
 
-// ── STORE FUNCTIONS ──
-let pendingBuyData=null;
-
-function switchStoreTab(tab,btn) {
-  document.querySelectorAll('.stab').forEach(b=>{b.style.background='transparent';b.style.color='var(--muted)';});
-  if(btn){btn.style.background='linear-gradient(135deg,#1b5e20,var(--success))';btn.style.color='#fff';}
-  ['coupons','tickets','mine'].forEach(t=>{
-    const el=document.getElementById('store-sec-'+t);
-    if(el) el.style.display=t===tab?'block':'none';
-  });
-  if(tab==='coupons') loadStoreCoupons();
-  if(tab==='tickets') loadStoreTickets();
-  if(tab==='mine') loadMyItems();
-}
-
-async function loadStore() {
-  switchStoreTab('coupons',document.querySelector('.stab'));
-}
-
-async function loadStoreCoupons() {
-  const el=document.getElementById('store-coupons-list');
-  if(!el) return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try {
-    const snap=await db.ref('storeItems').orderByChild('type').equalTo('coupon').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-tag"></i><p>Koi coupons nahi hain abhi.<br>Admin se maango!</p></div>';return;}
-    let html='';
-    snap.forEach(c=>{
-      const it=c.val(),sid=c.key;
-      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎟️';
-      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
-        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
-          ${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}
-          ${it.discount?`<div style="font-size:.68rem;color:var(--success);margin-top:2px">Discount: ${it.discount}</div>`:''}
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
-          <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#1b5e20,var(--success));border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
-        </div>
-      </div>`;
-    });
-    el.innerHTML=html||'<div class="empty"><i class="fas fa-tag"></i><p>No coupons available</p></div>';
-  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load</p></div>';}
-}
-
-async function loadStoreTickets() {
-  const el=document.getElementById('store-tickets-list');
-  if(!el) return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try {
-    const snap=await db.ref('storeItems').orderByChild('type').equalTo('ticket').once('value');
-    let html='';
-    if(!snap.exists()){
-      // default ticket
-      html=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.4);border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
-        <div style="width:56px;height:56px;border-radius:12px;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0">🎫</div>
-        <div style="flex:1">
-          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">Tournament Ticket</div>
-          <div style="font-size:.68rem;color:var(--muted);margin-top:2px">Daily Ticket Tournament join karne ke liye</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-          <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹50</div>
-          <button onclick="buyDefaultTicket()" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
-        </div>
-      </div>`;
-    } else {
-      snap.forEach(c=>{
-        const it=c.val(),sid=c.key;
-        const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:'🎫';
-        html+=`<div style="background:var(--card);border:1px solid rgba(124,77,255,.3);border-radius:12px;padding:14px;margin-bottom:9px;display:flex;align-items:center;gap:12px">
-          <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:rgba(124,77,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.8rem">${iconHtml}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
-            ${it.description?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">${it.description}</div>`:''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-            <div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);font-weight:700">₹${it.price}</div>
-            <button onclick="openBuyItem('${sid}')" style="padding:7px 14px;background:linear-gradient(135deg,#4a148c,#7c4dff);border:none;border-radius:8px;color:#fff;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.75rem;cursor:pointer">Buy</button>
-          </div>
-        </div>`;
-      });
-    }
-    el.innerHTML=html;
-  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
-}
-
-async function buyDefaultTicket(){
-  pendingBuyData={id:'default',name:'Tournament Ticket',price:50,type:'ticket'};
-  showBuyConfirm();
-}
-
-async function openBuyItem(sid) {
-  try {
-    const snap=await db.ref('storeItems/'+sid).once('value');
-    if(!snap.exists()){showToast('Item not found','error');return;}
-    pendingBuyData={id:sid,...snap.val()};
-    showBuyConfirm();
-  } catch(e){showToast('Error','error');}
-}
-
-function showBuyConfirm() {
-  if(!pendingBuyData) return;
-  const d=pendingBuyData;
-  const bal=userData?.wallet||0;
-  const iconHtml=d.banner?`<img src="${d.banner}" style="width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;margin-bottom:12px">`:(d.icon?`<div style="text-align:center;margin-bottom:12px"><img src="${d.icon}" style="width:80px;height:80px;border-radius:12px;object-fit:cover"></div>`:`<div style="text-align:center;font-size:3rem;margin-bottom:12px">${d.type==='ticket'?'🎫':'🎟️'}</div>`);
-  document.getElementById('buy-confirm-content').innerHTML=`
-    ${iconHtml}
-    <div style="font-family:Orbitron,monospace;font-size:.92rem;font-weight:700;text-align:center;margin-bottom:4px">${d.name}</div>
-    ${d.description?`<div style="font-family:Rajdhani,sans-serif;font-size:.78rem;color:var(--muted);text-align:center;margin-bottom:10px">${d.description}</div>`:''}
-    <div style="background:rgba(21,101,192,.1);border:1px solid rgba(21,101,192,.3);border-radius:11px;padding:14px;text-align:center;margin:12px 0">
-      <div style="font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--muted)">Price</div>
-      <div style="font-family:Orbitron,monospace;font-size:1.5rem;font-weight:900;color:var(--cyan)">₹${d.price}</div>
-      <div style="display:flex;justify-content:space-between;font-family:Rajdhani,sans-serif;font-size:.8rem;margin-top:6px">
-        <span style="color:var(--muted)">Balance: <b style="color:var(--gold)">₹${bal}</b></span>
-        <span>After: <b style="color:${bal-d.price<0?'var(--danger)':'var(--warn)'}">₹${bal-d.price}</b></span>
-      </div>
-    </div>`;
-  openModal('modal-buy-confirm');
-}
-
-async function confirmBuyItem() {
-  if(!pendingBuyData){closeModal('modal-buy-confirm');return;}
-  const d=pendingBuyData;
-  if((userData?.wallet||0)<d.price){showToast('Balance kam hai!','error');closeModal('modal-buy-confirm');return;}
-  try {
-    const newBal=(userData.wallet||0)-d.price;
-    const upd={};
-    upd['users/'+currentUser.uid+'/wallet']=newBal;
-    const txKey=db.ref().push().key;
-    upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Store Purchase',amount:-d.price,date:Date.now(),status:'completed',desc:'Bought: '+d.name};
-    if(d.type==='ticket'){
-      upd['users/'+currentUser.uid+'/tickets']=(userData.tickets||0)+1;
-    }
-    const pKey=db.ref().push().key;
-    let code='';
-    if(d.type==='coupon'){
-      code=d.couponCode||('SYN'+Math.random().toString(36).substr(2,8).toUpperCase());
-    }
-    upd['users/'+currentUser.uid+'/purchases/'+pKey]={itemId:d.id,name:d.name,type:d.type,price:d.price,couponCode:code,purchasedAt:Date.now()};
-    await db.ref().update(upd);
-    userData.wallet=newBal;
-    if(d.type==='ticket') userData.tickets=(userData.tickets||0)+1;
-    closeModal('modal-buy-confirm');
-    pendingBuyData=null;
-    if(d.type==='ticket') showToast('🎫 Ticket mila! Ab ticket tournament join karo.','success');
-    else if(code) showToast('🎟️ Coupon: '+code,'success');
-    else showToast('Purchase complete! ✓','success');
-  } catch(e){showToast('Purchase failed','error');}
-}
-
-async function loadMyItems() {
-  const el=document.getElementById('my-store-items');
-  if(!el||!currentUser) return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try {
-    const snap=await db.ref('users/'+currentUser.uid+'/purchases').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-shopping-bag"></i><p>Koi purchases nahi hain.</p></div>';return;}
-    const items=Object.entries(snap.val()).map(([k,v])=>({...v,_k:k})).sort((a,b)=>b.purchasedAt-a.purchasedAt);
-    el.innerHTML=items.map(it=>`<div style="background:linear-gradient(135deg,rgba(0,230,118,.05),var(--card));border:1px solid rgba(0,230,118,.2);border-radius:12px;padding:14px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:1.3rem">${it.type==='ticket'?'🎫':'🎟️'}</span>
-        <div>
-          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.9rem">${it.name}</div>
-          <div style="font-size:.65rem;color:var(--muted)">${new Date(it.purchasedAt).toLocaleDateString('en-IN')} · ₹${it.price}</div>
-        </div>
-      </div>
-      ${it.couponCode?`<div style="font-family:Orbitron,monospace;font-size:.88rem;color:var(--success);letter-spacing:3px;cursor:pointer" onclick="copyText('${it.couponCode}','Coupon Code')">${it.couponCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div>`:''}
-      ${it.type==='ticket'?'<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,77,255,.15);border:1px solid rgba(124,77,255,.4);border-radius:10px;padding:3px 10px;font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--purple);font-weight:700"><i class="fas fa-ticket-alt"></i>&nbsp;Tournament Ticket</div>':''}
-      ${it.redeemCode?`<div style="margin-top:6px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:8px;padding:8px 10px"><div style="font-size:.62rem;color:var(--muted);font-family:Rajdhani,sans-serif">🏆 Winner Redeem Code</div><div style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--gold);cursor:pointer" onclick="copyText('${it.redeemCode}','Redeem Code')">${it.redeemCode} <i class="fas fa-copy" style="font-size:.65rem"></i></div><div style="font-size:.65rem;color:var(--muted)">${it.redeemDesc||''}</div></div>`:''}
-    </div>`).join('');
-  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
-}
-
-// ── ADMIN STORE FUNCTIONS ──
-function handleIconUpload(input) {
-  const file=input.files[0];
-  if(!file) return;
-  if(file.size>2*1024*1024){showToast('Max 2MB!','warn');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const data=e.target.result;
-    const prev=document.getElementById('si-icon-preview');
-    const dataEl=document.getElementById('si-icon-data');
-    const area=document.getElementById('si-icon-area');
-    if(prev){prev.src=data;prev.style.display='block';}
-    if(dataEl) dataEl.value=data;
-    if(area) area.style.borderColor='var(--success)';
-    showToast('Icon uploaded! ✓','success');
-  };
-  reader.readAsDataURL(file);
-}
-
-function handleBannerUpload(input) {
-  const file=input.files[0];
-  if(!file) return;
-  if(file.size>3*1024*1024){showToast('Max 3MB!','warn');return;}
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const data=e.target.result;
-    const prev=document.getElementById('si-banner-preview');
-    const dataEl=document.getElementById('si-banner-data');
-    const area=document.getElementById('si-banner-area');
-    if(prev){prev.src=data;prev.style.display='block';}
-    if(dataEl) dataEl.value=data;
-    if(area) area.style.borderColor='var(--success)';
-    showToast('Banner uploaded! ✓','success');
-  };
-  reader.readAsDataURL(file);
-}
-
-async function createStoreItem() {
-  const type=document.getElementById('si-type')?.value||'coupon';
-  const name=document.getElementById('si-name')?.value.trim();
-  const desc=document.getElementById('si-desc')?.value.trim();
-  const price=parseInt(document.getElementById('si-price')?.value)||0;
-  const couponCode=document.getElementById('si-coupon-code')?.value.trim();
-  const discount=document.getElementById('si-discount')?.value.trim();
-  const icon=document.getElementById('si-icon-data')?.value||'';
-  const banner=document.getElementById('si-banner-data')?.value||'';
-  if(!name||!price){showToast('Name aur price required!','error');return;}
-  try {
-    const key=db.ref('storeItems').push().key;
-    await db.ref('storeItems/'+key).set({type,name,description:desc,price,couponCode:couponCode||'',discount:discount||'',icon,banner,createdAt:Date.now()});
-    // Reset form
-    ['si-name','si-desc','si-price','si-coupon-code','si-discount','si-icon-data','si-banner-data'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    const ip=document.getElementById('si-icon-preview');if(ip)ip.style.display='none';
-    const bp=document.getElementById('si-banner-preview');if(bp)bp.style.display='none';
-    const ia=document.getElementById('si-icon-area');if(ia)ia.style.borderColor='var(--border)';
-    const ba=document.getElementById('si-banner-area');if(ba)ba.style.borderColor='var(--border)';
-    showToast('Store item added! ✓','success');
-    loadAStoreItems();
-  } catch(e){showToast('Error adding item','error');}
-}
-
-async function loadAStoreItems() {
-  const el=document.getElementById('a-store-list');
-  if(!el) return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try {
-    const snap=await db.ref('storeItems').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-store"></i><p>No items yet</p></div>';return;}
-    let html='';
-    snap.forEach(c=>{
-      const it=c.val(),sid=c.key;
-      const iconHtml=it.icon?`<img src="${it.icon}" style="width:100%;height:100%;object-fit:cover;border-radius:8px">`:(it.type==='ticket'?'🎫':'🎟️');
-      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:10px">
-        <div style="width:50px;height:50px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:1.4rem">${iconHtml}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.85rem">${it.name}</div>
-          <div style="font-size:.65rem;color:var(--muted)">₹${it.price} · ${it.type} ${it.couponCode?'· Code: '+it.couponCode:''}</div>
-        </div>
-        <button onclick="deleteStoreItem('${sid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 12px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
-      </div>`;
-    });
-    el.innerHTML=html;
-  } catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
-}
-
-async function deleteStoreItem(sid) {
-  if(!confirm('Delete this store item?')) return;
-  try{await db.ref('storeItems/'+sid).remove();showToast('Item deleted','warn');loadAStoreItems();}
-  catch(e){showToast('Error','error');}
-}
-
-// ── USERNAME SYSTEM ──
-let usernameCheckTimer=null;
-document.addEventListener('DOMContentLoaded',()=>{
-  const unameInput=document.getElementById('su-username');
-  if(unameInput){
-    unameInput.addEventListener('input',()=>{
-      clearTimeout(usernameCheckTimer);
-      const val=unameInput.value;
-      const msg=document.getElementById('uname-check');
-      if(!val||val.length<3){if(msg)msg.innerHTML='<span style="color:var(--muted)">Min 3 characters</span>';return;}
-      if(msg) msg.innerHTML='<span style="color:var(--muted)">Checking...</span>';
-      usernameCheckTimer=setTimeout(async()=>{
-        try{
-          const snap=await db.ref('usernames/'+val).once('value');
-          if(snap.exists()){if(msg)msg.innerHTML='<span style="color:var(--danger)">✗ Username already taken!</span>';}
-          else{if(msg)msg.innerHTML='<span style="color:var(--success)">✓ Available!</span>';}
-        }catch(e){}
-      },500);
-    });
-  }
-});
-
-// Override doSignup to include username
-const _baseDoSignup=typeof doSignup==='function'?doSignup:null;
-// ── OVERRIDE showApp to load tickets ──
-const _origShowApp=typeof showApp==='function'?showApp:null;
-function showApp() {
-  document.getElementById('page-auth').style.display = 'none';
-  document.getElementById('app').classList.add('show');
-  document.getElementById('blocked-screen').classList.remove('show');
-  updateSideMenu();
-  loadTournaments();
-  loadLiveSection();
-  loadNotifications();
-  updateHeroBanner();
-  checkAutoDeleteTournaments();
-  // Load tickets count
-  if(currentUser) {
-    db.ref('users/'+currentUser.uid+'/tickets').on('value',s=>{
-      const t=s.val()||0;
-      userData.tickets=t;
-      const ht=document.getElementById('hero-tickets');
-      if(ht) ht.textContent='🎫'+t;
-    });
-  }
-}
-
-// ── WINNER REDEEM CODE (Admin give to winner) ──
-function openWinnerRedeem(uid,name,tournamentName) {
-  document.getElementById('wr-uid').value=uid;
-  document.getElementById('wr-username').value=name;
-  document.getElementById('wr-tournament-name').value=tournamentName||'';
-  document.getElementById('wr-user-info').innerHTML=`<i class="fas fa-user" style="color:var(--cyan)"></i> <b>${name}</b><br><span style="color:var(--muted);font-size:.78rem">UID: ${uid}</span>`;
-  updateWRForm();
-  openModal('modal-winner-redeem');
-}
-
-function updateWRForm() {
-  const type=document.getElementById('wr-prize-type')?.value;
-  const cashFields=document.getElementById('wr-cash-fields');
-  const redeemFields=document.getElementById('wr-redeem-fields');
-  if(cashFields) cashFields.style.display=type==='cash'?'block':'none';
-  if(redeemFields) redeemFields.style.display=type==='redeem'?'block':'none';
-}
-
-async function giveWinnerPrize() {
-  const uid=document.getElementById('wr-uid')?.value;
-  const userName=document.getElementById('wr-username')?.value;
-  const type=document.getElementById('wr-prize-type')?.value;
-  const tName=document.getElementById('wr-tournament-name')?.value||'Tournament';
-  if(!uid){showToast('Error: No user selected','error');return;}
-  try {
-    if(type==='cash'){
-      const amount=parseInt(document.getElementById('wr-amount')?.value)||0;
-      if(!amount||amount<1){showToast('Enter valid prize amount','error');return;}
-      const cur=(await db.ref('users/'+uid+'/wallet').once('value')).val()||0;
-      const newBal=cur+amount;
-      const txKey=db.ref().push().key;
-      const upd={};
-      upd['users/'+uid+'/wallet']=newBal;
-      upd['users/'+uid+'/transactions/'+txKey]={type:'Match Prize',amount,date:Date.now(),status:'completed',desc:'🏆 Winner prize: '+tName};
-      const nk=db.ref().push().key;
-      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Prize!',body:'₹'+amount+' added for winning '+tName+'! Congrats!',type:'deposit',date:Date.now(),read:false};
-      await db.ref().update(upd);
-      closeModal('modal-winner-redeem');
-      showToast('₹'+amount+' prize given to winner! ✓','success');
-    } else {
-      const code=document.getElementById('wr-redeem-code')?.value.trim();
-      const desc=document.getElementById('wr-redeem-desc')?.value.trim();
-      if(!code){showToast('Enter redeem code!','error');return;}
-      const pKey=db.ref().push().key;
-      const nk=db.ref().push().key;
-      const upd={};
-      upd['users/'+uid+'/purchases/'+pKey]={itemId:'winner-prize',name:'Winner Prize: '+tName,type:'redeem',price:0,redeemCode:code,redeemDesc:desc||'',purchasedAt:Date.now()};
-      upd['notifications/'+uid+'/'+nk]={title:'🏆 Winner Redeem Code!',body:'Aapne '+tName+' jeeta! Redeem code: '+code,type:'deposit',date:Date.now(),read:false};
-      await db.ref().update(upd);
-      closeModal('modal-winner-redeem');
-      showToast('Redeem code sent to winner! ✓','success');
-    }
-    loadAUsers();
-  } catch(e){showToast('Error giving prize','error');}
-}
-
-// ── OVERRIDE loadATournaments for better display + fix delete ──
-async function loadATournaments() {
-  const el=document.getElementById('a-t-list');
-  if(!el) return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try {
-    const snap=await db.ref('tournaments').once('value');
-    if(!snap.exists()){el.innerHTML='<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments yet.<br>Create one above!</p></div>';return;}
-    let html='',count=0;
-    snap.forEach(c=>{
-      const t=c.val(),tid=c.key;count++;
-      const isTicket=t.entryType==='ticket';
-      const feeDisp=isTicket?'🎫 Ticket':(t.entryFee==0?'FREE':'₹'+t.entryFee);
-      const roomSetInfo=t.roomSetAt?`<div style="font-size:.62rem;color:var(--warn);margin-top:2px">⚠️ Auto-delete: ${Math.max(0,Math.ceil((60*60*1000-(Date.now()-t.roomSetAt))/60000))}min remaining</div>`:'';
-      html+=`<div style="background:var(--card);border:1px solid ${t.featured?'var(--gold)':isTicket?'var(--purple)':'var(--border)'};border-radius:11px;overflow:hidden;margin-bottom:9px">
-        ${t.thumbnail?`<img src="${t.thumbnail}" style="width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--card2)" onerror="this.style.display='none'">`:''}
-        <div style="padding:11px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div style="flex:1;min-width:0">
-            <div style="font-family:Orbitron,monospace;font-size:.82rem;font-weight:700">${t.name}${t.featured?' ⭐':''}${isTicket?' 🎫':''}</div>
-            <div style="font-size:.7rem;color:var(--muted);margin-top:3px;font-family:Rajdhani,sans-serif;line-height:1.5">${t.map||'Bermuda'} · ${(t.mode||'solo').toUpperCase()} · ${feeDisp}<br>Prize: ${t.prizePool||'—'} · Players: ${t.registered||0}/${t.maxPlayers||32}${t.roomId?'<br><span style="color:var(--cyan)">🔐 Room set</span>':''}</div>
-            ${roomSetInfo}
-          </div>
-          <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
-            <button onclick="openEditT('${tid}')" style="background:var(--blue1);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-edit"></i></button>
-            <button onclick="openSetRoomModal('${tid}','${(t.name||'').replace(/'/g,"\\'")}')" style="background:var(--warn);border:none;border-radius:7px;color:#000;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-key"></i></button>
-            <button onclick="deleteT('${tid}')" style="background:var(--danger);border:none;border-radius:7px;color:#fff;padding:6px 10px;font-family:Rajdhani,sans-serif;font-weight:700;font-size:.72rem;cursor:pointer"><i class="fas fa-trash"></i></button>
-          </div>
-        </div>
-        ${t.players?`<div style="padding:0 11px 11px"><div style="font-size:.65rem;color:var(--muted);font-family:Rajdhani,sans-serif;margin-bottom:6px">JOINED PLAYERS (${t.registered||0})</div>${Object.values(t.players).map(p=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)"><div><div style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:.78rem">${p.name||'?'} ${p.username?'<span style="color:var(--muted)">@'+p.username+'</span>':''}</div></div><button onclick="openWinnerRedeem('${Object.entries(t.players||{}).find(([k,v])=>v.name===p.name)?.[0]||''}','${(p.name||'').replace(/'/g,"\\'")}','${(t.name||'').replace(/'/g,"\\'")}') style="background:var(--gold);border:none;border-radius:6px;color:#000;padding:3px 8px;font-size:.65rem;font-family:Rajdhani,sans-serif;font-weight:700;cursor:pointer">🏆 Give Prize</button></div>`).join('')}</div>`:''}
-      </div>`;
-    });
-    el.innerHTML=html||(count===0?'<div class="empty"><i class="fas fa-trophy"></i><p>No tournaments</p></div>':'');
-  } catch(e){console.error(e);el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed to load. Check Firebase.</p></div>';}
-}
-
-// Fix deleteT
-async function deleteT(tid) {
-  if(!confirm('Delete this tournament?')) return;
-  try{
-    await db.ref('tournaments/'+tid).remove();
-    showToast('Tournament deleted!','warn');
-    loadATournaments();
-  }catch(e){console.error('Delete error:',e);showToast('Delete failed! Check Firebase Rules','error');}
-}
-
-// Quick room set modal
+// ── QUICK ROOM SET ──
 function openSetRoomModal(tid,tname) {
   const roomId=prompt('Enter Room ID for "'+tname+'":');
   if(!roomId) return;
@@ -3994,275 +3779,11 @@ function openSetRoomModal(tid,tname) {
   db.ref('tournaments/'+tid).update({roomId,roomPassword:roomPwd,roomSetAt:Date.now()})
     .then(()=>{
       showToast('Room credentials set! Auto-delete in 1hr.','success');
-      // Notify all joined players
       sendTournamentNotif(tid,tname,'Room credentials set! Check My Matches now. 🔐');
       loadATournaments();
     })
     .catch(()=>showToast('Error setting room','error'));
 }
-
-// ── createTournament override with ticket support ──
-async function createTournament() {
-  const name=document.getElementById('t-name')?.value.trim();
-  const fee=parseInt(document.getElementById('t-fee')?.value)||0;
-  const prize=document.getElementById('t-prize')?.value.trim();
-  const map=document.getElementById('t-map')?.value.trim();
-  const max=parseInt(document.getElementById('t-max')?.value)||32;
-  const mode=document.getElementById('t-mode')?.value||'solo';
-  const startTimeVal=document.getElementById('t-starttime')?.value;
-  const rulesRaw=document.getElementById('t-rules')?.value.trim();
-  const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
-  const startTime=startTimeVal?new Date(startTimeVal).getTime():null;
-  const featured=document.getElementById('t-featured')?.value==='1';
-  const entryType=document.getElementById('t-entry-type')?.value||'normal';
-  const thumb=getThumbValue('t');
-  if(!name||!prize||!map){showToast('Name, Prize & Map required!','error');return;}
-  try {
-    const key=db.ref('tournaments').push().key;
-    await db.ref('tournaments/'+key).set({name,entryFee:entryType==='ticket'?0:fee,prizePool:prize,map,maxPlayers:max,registered:0,thumbnail:thumb,mode,startTime,rules,featured,entryType,createdAt:Date.now()});
-    ['t-name','t-fee','t-prize','t-map','t-max','t-thumb-url','t-thumb-data','t-rules'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    const prev=document.getElementById('t-img-preview');if(prev)prev.classList.remove('show');
-    const area=document.getElementById('t-img-area');
-    if(area){area.classList.remove('has-img');const p=area.querySelector('p');if(p)p.innerHTML='Tap to upload image<br><span style="font-size:.65rem;opacity:.6">PNG, JPG, WEBP</span>';const ic=area.querySelector('i');if(ic)ic.style.color='';}
-    sendGlobalNotif('🏆 New Tournament!',`"${name}" is open! Entry: ${entryType==='ticket'?'🎫 Ticket':fee===0?'FREE':'₹'+fee}`,'tournament');
-    showToast('Tournament created! ✓','success');
-    loadATournaments();
-  } catch(e){console.error(e);showToast('Error creating','error');}
-}
-
-// ── saveTEdit override with entry type ──
-const _origSaveTEdit=typeof saveTEdit==='function'?saveTEdit:null;
-async function saveTEdit() {
-  const tid=document.getElementById('et-id')?.value;
-  const thumb=getThumbValue('et');
-  const startTimeVal=document.getElementById('et-starttime')?.value;
-  const rulesRaw=document.getElementById('et-rules')?.value.trim();
-  const rules=rulesRaw?rulesRaw.split('\n').filter(r=>r.trim()):[];
-  const roomId=document.getElementById('et-roomid')?.value.trim();
-  const roomPassword=document.getElementById('et-roompwd')?.value.trim();
-  const entryType=document.getElementById('et-entry-type')?.value||'normal';
-  const upd={
-    name:document.getElementById('et-name')?.value.trim(),
-    entryFee:parseInt(document.getElementById('et-fee')?.value)||0,
-    prizePool:document.getElementById('et-prize')?.value.trim(),
-    map:document.getElementById('et-map')?.value.trim(),
-    maxPlayers:parseInt(document.getElementById('et-max')?.value)||32,
-    mode:document.getElementById('et-mode')?.value||'solo',
-    rules,thumbnail:thumb,
-    startTime:startTimeVal?new Date(startTimeVal).getTime():null,
-    roomId,roomPassword,entryType,
-    featured:document.getElementById('et-featured')?.value==='1'
-  };
-  if(roomId&&roomPassword&&!upd.roomSetAt) upd.roomSetAt=Date.now();
-  try {
-    await db.ref('tournaments/'+tid).update(upd);
-    if(roomId&&roomPassword) sendTournamentNotif(tid,upd.name,'Room credentials set! Check My Matches. 🔐');
-    closeModal('modal-edit-t');
-    showToast('Updated! ✓','success');
-    loadATournaments();
-  } catch(e){showToast('Error','error');}
-}
-
-// ── loadAdminData override to include wheel/store ──
-const _origLoadAdminData=typeof loadAdminData==='function'?loadAdminData:null;
-async function loadAdminData() {
-  const isAdmin=userData?.isAdmin||false;
-  if(!isAdmin){showToast('Unauthorized','error');navTo('home');return;}
-  loadAUsers();loadADeposits();loadAWithdrawals();loadATournaments();loadALive();
-  loadAdminUPISettings();loadAdminSupportSettings();
-  loadAdminWheelSettings();loadAStoreItems();
-}
-
-// ── updateHeroBanner override ──
-const _origUpdateHero=typeof updateHeroBanner==='function'?updateHeroBanner:null;
-function updateHeroBanner() {
-  if(!userData) return;
-  const name=(userData.name||'Player').split(' ')[0];
-  const hn=document.getElementById('hero-name');if(hn)hn.textContent=name;
-  const hb=document.getElementById('hero-bal');if(hb)hb.textContent='₹'+(userData.wallet||0);
-  const matchCount=userData.registeredMatches?Object.keys(userData.registeredMatches).length:0;
-  const hm=document.getElementById('hero-matches');if(hm)hm.textContent=matchCount;
-  const hw=document.getElementById('hero-wins');if(hw)hw.textContent=(userData.stats?.wins||0);
-  const ht=document.getElementById('hero-tickets');if(ht)ht.textContent='🎫'+(userData.tickets||0);
-}
-
-// ── loadProfile override to show username ──
-const _origLoadProfile=typeof loadProfile==='function'?loadProfile:null;
-function loadProfile() {
-  if(!userData||!currentUser) return;
-  const init=(userData.name||'P')[0].toUpperCase();
-  const pa=document.getElementById('prof-av');if(pa)pa.textContent=init;
-  const pn=document.getElementById('prof-name');if(pn)pn.textContent=userData.name||'';
-  const pe=document.getElementById('prof-email');if(pe)pe.textContent=currentUser.email||'';
-  const puid=document.getElementById('prof-uid');if(puid)puid.textContent=currentUser.uid;
-  const pff=document.getElementById('pf-ffuid');if(pff)pff.value=userData.uid||'';
-  const pig=document.getElementById('pf-ign');if(pig)pig.value=userData.ign||'';
-  const pdn=document.getElementById('pf-dname');if(pdn)pdn.value=userData.name||'';
-  const psq=document.getElementById('pf-squad');if(psq)psq.value=userData.squad||'';
-  const {level}=calcLevel(userData.xp||0);
-  const plb=document.getElementById('prof-level-badge');if(plb)plb.textContent='LV'+level;
-  const psd=document.getElementById('prof-squad-disp');if(psd)psd.textContent=userData.squad?'👥 '+userData.squad:'';
-  const pud=document.getElementById('prof-username-disp');if(pud)pud.textContent=userData.username?'@'+userData.username:'';
-  loadProfileStats();
-}
-
-// ── joinTournament override with ticket support ──
-const _origJoinT=typeof joinTournament==='function'?joinTournament:null;
-async function joinTournament(tid) {
-  if(!currentUser||!userData) return;
-  try {
-    const snap=await db.ref('tournaments/'+tid).once('value');
-    if(!snap.exists()){showToast('Not found','error');return;}
-    const t=snap.val();
-    const isTicket=t.entryType==='ticket';
-    const fee=t.entryFee||0;
-    if(isTicket&&(userData.tickets||0)<=0){showToast('No tickets! Store se kharido.','warn');navTo('store');return;}
-    if(!isTicket&&fee>(userData.wallet||0)){showToast('Insufficient balance!','warn');openAddMoney();return;}
-    if((t.registered||0)>=(t.maxPlayers||99)){showToast('Tournament full!','error');return;}
-    const myIds=getMyMatchIds();if(myIds.includes(tid)){showToast('Already joined!','warn');return;}
-    const newBal=(userData.wallet||0)-fee;
-    const newTickets=isTicket?(userData.tickets||0)-1:userData.tickets||0;
-    const mKey=db.ref().push().key,txKey=db.ref().push().key;
-    const matchEntry={id:tid,name:t.name,status:'upcoming',prizePool:t.prizePool,entryFee:isTicket?'ticket':fee,map:t.map,mode:t.mode||'solo',joinedAt:Date.now()};
-    const tx={type:isTicket?'Ticket Used':'Tournament Join',amount:isTicket?0:-fee,date:Date.now(),status:'completed',desc:t.name};
-    const upd={};
-    if(isTicket) upd['users/'+currentUser.uid+'/tickets']=newTickets;
-    else upd['users/'+currentUser.uid+'/wallet']=newBal;
-    upd['users/'+currentUser.uid+'/registeredMatches/'+mKey]=matchEntry;
-    upd['users/'+currentUser.uid+'/transactions/'+txKey]=tx;
-    upd['tournaments/'+tid+'/registered']=(t.registered||0)+1;
-    upd['tournaments/'+tid+'/players/'+currentUser.uid]={name:userData.name||'Player',username:userData.username||'',ign:userData.ign||'',squad:userData.squad||'',joinedAt:Date.now()};
-    const newXP=(userData.xp||0)+XP_PER_MATCH;
-    upd['users/'+currentUser.uid+'/xp']=newXP;
-    await db.ref().update(upd);
-    if(isTicket) userData.tickets=newTickets; else userData.wallet=newBal;
-    userData.xp=newXP;
-    if(!userData.registeredMatches) userData.registeredMatches={};
-    userData.registeredMatches[mKey]=matchEntry;
-    showToast('Joined! 🎮 +'+XP_PER_MATCH+' XP','success');
-    loadTournaments();updateHeroBanner();
-  } catch(e){console.error(e);showToast('Error joining','error');}
-}
-
-// ── buildTCard override: show ticket tournaments ──
-function buildTCard(t,tid,joined,full){
-  const isTicket=t.entryType==='ticket';
-  const thumb=t.thumbnail?`<img class="t-thumb" src="${t.thumbnail}" alt="${t.name}" onerror="this.parentElement.innerHTML='<div class=t-thumb-placeholder><i class=fas\\ fa-gamepad></i></div>'">`:`<div class="t-thumb-placeholder"><i class="fas fa-gamepad"></i></div>`;
-  let btn='';
-  if(joined) btn=`<button class="join-btn joined"><i class="fas fa-check"></i> Joined</button>`;
-  else if(full) btn=`<button class="join-btn full"><i class="fas fa-lock"></i> Full</button>`;
-  else btn=`<button class="join-btn" onclick="openJoinConfirm('${tid}')" style="${isTicket?'background:linear-gradient(135deg,#4a148c,#7c4dff)':''}"><i class="fas ${isTicket?'fa-ticket-alt':'fa-gamepad'}"></i> ${isTicket?'Use Ticket':'Join Now'}</button>`;
-  const fee=isTicket?`<span class="t-fee" style="background:rgba(124,77,255,.1);border-color:var(--purple);color:var(--purple)">🎫 Ticket</span>`:t.entryFee==0?`<span class="t-fee free"><i class="fas fa-gift"></i> FREE</span>`:`<span class="t-fee">₹${t.entryFee}</span>`;
-  const modeLabels={solo:'👤 Solo',duo:'👥 Duo',squad:'⚔️ Squad'};
-  const modeLbl=modeLabels[t.mode||'solo']||'👤 Solo';
-  const pct=Math.min(100,((t.registered||0)/(t.maxPlayers||32))*100);
-  const isFull=(t.registered||0)>=(t.maxPlayers||32);
-  let cdHtml='';
-  if(t.startTime){
-    const id='cd-'+tid;
-    if(t.startTime>Date.now()){cdHtml=`<div class="t-countdown" id="${id}"><i class="fas fa-clock"></i> <span>—</span></div>`;setTimeout(()=>startCountdown(id,t.startTime),80);}
-    else cdHtml=`<div class="t-countdown live-now"><i class="fas fa-circle"></i> LIVE NOW</div>`;
-  }
-  return `<div class="t-card fiu${t.featured?' featured':''}">
-    <div class="t-thumb-wrap">${thumb}
-      <div class="t-status-bar"><div style="display:flex;gap:5px;align-items:center">
-        ${joined?'<span class="badge badge-new">✓ Joined</span>':''}
-        ${isFull&&!joined?'<span class="badge" style="background:rgba(255,68,68,.2);border:1px solid var(--danger);color:var(--danger)">Full</span>':''}
-        ${isTicket?'<span class="badge" style="background:rgba(124,77,255,.2);border:1px solid var(--purple);color:var(--purple)">🎫 Ticket Only</span>':''}
-      </div></div>
-    </div>
-    <div class="t-body">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
-        <div class="t-name">${t.name}</div>
-        <button onclick="openTDetail('${tid}')" style="background:none;border:none;color:var(--muted);font-size:.85rem;cursor:pointer;padding:2px 4px;flex-shrink:0;margin-top:1px"><i class="fas fa-info-circle"></i></button>
-      </div>
-      <div class="t-tags">
-        <div class="t-tag"><i class="fas fa-map-marker-alt"></i> ${t.map||'Bermuda'}</div>
-        <div class="t-tag"><i class="fas fa-users"></i> ${t.registered||0}/${t.maxPlayers||32}</div>
-        <div class="t-tag">${modeLbl}</div>
-      </div>
-      ${cdHtml}
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-label"><span>Players</span><span>${t.registered||0}/${t.maxPlayers||32}</span></div>
-        <div class="progress-bar"><div class="progress-bar-fill${isFull?' full':''}" style="width:${pct}%"></div></div>
-      </div>
-      <div class="t-footer" style="margin-top:10px">
-        <div class="t-prize"><i class="fas fa-trophy"></i><span>${t.prizePool}</span></div>
-        <div style="display:flex;align-items:center;gap:7px">${fee}${btn}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── filterTournaments override: add ticket filter ──
-function filterTournaments(type,btn) {
-  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  let filtered=allTournamentsCache;
-  if(type==='free') filtered=allTournamentsCache.filter(t=>!t.entryFee||t.entryFee===0);
-  else if(type==='ticket') filtered=allTournamentsCache.filter(t=>t.entryType==='ticket');
-  else if(type!=='all') filtered=allTournamentsCache.filter(t=>(t.mode||'solo')===type);
-  renderTournaments(filtered);
-}
-
-// ── Add Ticket filter tab (inject into DOM) ──
-document.addEventListener('DOMContentLoaded',()=>{
-  const ft=document.getElementById('filter-tabs');
-  if(ft&&!document.querySelector('[onclick*="ticket"]')){
-    const ticketTab=document.createElement('div');
-    ticketTab.className='filter-tab';
-    ticketTab.setAttribute('onclick',"filterTournaments('ticket',this)");
-    ticketTab.textContent='🎫 Ticket';
-    ft.appendChild(ticketTab);
-  }
-});
-
-// ── Spin Wheel styles ──
-const spinStyles=document.createElement('style');
-spinStyles.textContent=`
-.stab{transition:all .2s!important;}
-.store-sec{display:none}
-@keyframes popIn{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.07)}100%{transform:scale(1);opacity:1}}
-`;
-document.head.appendChild(spinStyles);
-
-// ── INIT ──
-// ── GLOBAL FUNCTION EXPORTS ──
-window.switchAuthTab = switchAuthTab;
-window.togglePass = togglePass;
-window.doLogin = doLogin;
-window.doSignup = doSignup;
-window.doGoogleLogin = doGoogleLogin;
-
-
-
-// ── AUTH PARTICLES ──
-function initAuthParticles() {
-  const c=document.getElementById('auth-particles');
-  if(!c) return;
-  for(let i=0;i<18;i++){
-    const p=document.createElement('div');
-    p.className='auth-particle';
-    p.style.left=Math.random()*100+'%';
-    p.style.top=Math.random()*100+'%';
-    p.style.animationDelay=Math.random()*4+'s';
-    p.style.animationDuration=(3+Math.random()*3)+'s';
-    p.style.opacity=Math.random()*.4+.1;
-    p.style.width=p.style.height=(Math.random()*3+1)+'px';
-    if(Math.random()>.5) p.style.background='var(--purple)';
-    c.appendChild(p);
-  }
-}
-document.addEventListener('DOMContentLoaded',initAuthParticles);
-
-// Spin button shimmer
-function runSpinShimmer(){
-  const sh=document.getElementById('spin-shimmer');
-  if(!sh) return;
-  sh.style.transition='none';sh.style.transform='translateX(-100%)';
-  setTimeout(()=>{sh.style.transition='transform 0.6s ease';sh.style.transform='translateX(200%)';},50);
-}
-setInterval(runSpinShimmer, 2500);
 
 // ── SHOW PASSWORD WITH AD ──
 function showPassWithAd(matchId, pass) {
@@ -4297,19 +3818,58 @@ function showPassWithAd(matchId, pass) {
         if(btn){btn.style.display='none';}
         showToast('🔑 Room Password reveal ho gaya!','success');
       };
-    } else {
-      if(sb) sb.textContent='⏳ Skip in '+sec+'s';
-    }
+    } else { if(sb) sb.textContent='⏳ Skip in '+sec+'s'; }
   },1000);
 }
 
+// ── INIT ──
+function initAuthParticles() {
+  const c=document.getElementById('auth-particles');
+  if(!c) return;
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='auth-particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.top=Math.random()*100+'%';
+    p.style.animationDelay=Math.random()*4+'s';
+    p.style.animationDuration=(3+Math.random()*3)+'s';
+    p.style.opacity=Math.random()*.4+.1;
+    p.style.width=p.style.height=(Math.random()*3+1)+'px';
+    if(Math.random()>.5) p.style.background='var(--purple)';
+    c.appendChild(p);
+  }
+}
+document.addEventListener('DOMContentLoaded',initAuthParticles);
+
+function runSpinShimmer(){
+  const sh=document.getElementById('spin-shimmer');
+  if(!sh) return;
+  sh.style.transition='none';sh.style.transform='translateX(-100%)';
+  setTimeout(()=>{sh.style.transition='transform 0.6s ease';sh.style.transform='translateX(200%)';},50);
+}
+setInterval(runSpinShimmer, 2500);
+
+// ── EXPORT FUNCTIONS ──
+window.switchAuthTab = switchAuthTab;
+window.togglePass = togglePass;
+window.doLogin = doLogin;
+window.doSignup = doSignup;
+window.doGoogleLogin = doGoogleLogin;
+
+// Add ticket filter tab
+document.addEventListener('DOMContentLoaded',()=>{
+  const ft=document.getElementById('filter-tabs');
+  if(ft&&!document.querySelector('[onclick*="ticket"]')){
+    const ticketTab=document.createElement('div');
+    ticketTab.className='filter-tab';
+    ticketTab.setAttribute('onclick',"filterTournaments('ticket',this)");
+    ticketTab.textContent='🎫 Ticket';
+    ft.appendChild(ticketTab);
+  }
+});
+
+// ── SYNC PAY INIT ──
 initFirebase();
-// App Check enable
-const appCheck = firebase.appCheck();
-appCheck.activate(
-  '6Lf4F6ssAAAAALbKmovWLnnqeNM97frGnXtzLnRy',  // TERI SECRET KEY? NAHI - YE GALAT HAI!
-  true
-);
 </script>
 </body>
 </html>
