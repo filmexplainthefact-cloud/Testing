@@ -6,10 +6,7 @@
 <title>Synex Tournament – FF MAX</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<!-- SYNEX PAY WIDGET -->
-<script src="https://our-payment-gateway.onrender.com/widget.js"></script>
 <!-- ═══ SYNEX PAY WIDGET ═══ -->
-<script src="https://our-payment-gateway.onrender.com/widget.js"></script>
 <style>
 :root{
   --bg:#060d1b;--bg2:#081528;--card:#0b1f3d;--card2:#0e2650;
@@ -1039,158 +1036,460 @@ document.addEventListener('DOMContentLoaded',initAuthParticles);
 // ══════════════════════════════════════════
 //  SYNEX PAY — INTEGRATED PAYMENT SYSTEM
 // ══════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+//  SYNEX PAY — DIRECT QR INTEGRATION (NO WIDGET)
+//  Backend: https://our-payment-gateway.onrender.com
+// ══════════════════════════════════════════════════════
 const SYNEX_BACKEND = 'https://our-payment-gateway.onrender.com';
 const SYNEX_SECRET  = 'synex_secret_2026';
 
-let synexPollInterval = null, synexCurrentDepositKey = null, synexCurrentTxKey = null;
-let synexCurrentOrderNote = null, synexCurrentAmount = 0, synexCreditDone = false;
+let synexPollInterval  = null;
+let synexCurrentAmount = 0;
+let synexCreditDone    = false;
+let synexDepositKey    = null;
+let synexTxKey         = null;
+let synexOrderNote     = null;
+let synexQrTimer       = null;
+let synexQrExpiry      = 0;
 
+// ── OPEN ADD MONEY MODAL ──
 function openAddMoney() {
-  synexCurrentDepositKey=null;synexCurrentTxKey=null;synexCurrentOrderNote=null;
-  synexCurrentAmount=0;synexCreditDone=false;clearInterval(synexPollInterval);
-  document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
-  const ca=document.getElementById('synex-custom-amt');if(ca)ca.value='';
-  const area=document.getElementById('synex-pay-area');
-  if(area)area.innerHTML=`<div style="text-align:center;padding:16px 0 8px;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:.82rem"><i class="fas fa-hand-pointer" style="font-size:1.4rem;display:block;margin-bottom:6px;opacity:.4"></i>Upar se amount select karo</div>`;
-  const sb=document.getElementById('pay-status-box');if(sb)sb.style.display='none';
+  clearSynexState();
+  document.querySelectorAll('.amt-chip').forEach(c => c.classList.remove('selected'));
+  const ca = document.getElementById('synex-custom-amt');
+  if (ca) ca.value = '';
+  const area = document.getElementById('synex-pay-area');
+  if (area) area.innerHTML = `
+    <div style="text-align:center;padding:20px 0 10px;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:.85rem">
+      <i class="fas fa-hand-pointer" style="font-size:1.6rem;display:block;margin-bottom:8px;opacity:.4"></i>
+      Upar se amount select karo — QR turant generate hoga
+    </div>`;
+  const sb = document.getElementById('pay-status-box');
+  if (sb) sb.style.display = 'none';
   openModal('modal-addmoney');
 }
 
+function clearSynexState() {
+  clearInterval(synexPollInterval);
+  clearInterval(synexQrTimer);
+  synexPollInterval = null; synexQrTimer = null;
+  synexCurrentAmount = 0; synexCreditDone = false;
+  synexDepositKey = null; synexTxKey = null;
+  synexOrderNote = null; synexQrExpiry = 0;
+}
+
+// ── SELECT AMOUNT CHIP ──
 function selectAmount(amt, el) {
-  document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
-  if(el)el.classList.add('selected');
-  const ca=document.getElementById('synex-custom-amt');if(ca)ca.value='';
-  showSynexPayButton(amt);
+  document.querySelectorAll('.amt-chip').forEach(c => c.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  const ca = document.getElementById('synex-custom-amt');
+  if (ca) ca.value = '';
+  generateQR(amt);
 }
 
 function applyCustomAmt() {
-  const val=parseInt(document.getElementById('synex-custom-amt').value);
-  if(!val||val<1){showToast('Valid amount daalo','error');return;}
-  document.querySelectorAll('.amt-chip').forEach(c=>c.classList.remove('selected'));
-  showSynexPayButton(val);
+  const val = parseInt(document.getElementById('synex-custom-amt').value);
+  if (!val || val < 1) { showToast('Valid amount daalo','error'); return; }
+  document.querySelectorAll('.amt-chip').forEach(c => c.classList.remove('selected'));
+  generateQR(val);
 }
 
-function showSynexPayButton(amount) {
-  synexCurrentAmount=amount;
-  const area=document.getElementById('synex-pay-area');if(!area)return;
-  area.innerHTML=`<div style="background:linear-gradient(135deg,rgba(124,77,255,.1),rgba(0,229,255,.05));border:1px solid rgba(124,77,255,.3);border-radius:14px;padding:16px;text-align:center;margin-bottom:4px"><div style="font-family:Orbitron,monospace;font-size:1.6rem;font-weight:900;color:var(--gold);margin-bottom:4px">₹${amount}</div><div style="font-family:Rajdhani,sans-serif;font-size:.72rem;color:var(--muted);margin-bottom:14px">GPay · PhonePe · Paytm · BHIM — sab supported</div><button class="synex-pay-btn" id="main-pay-btn" onclick="launchSynexPay(${amount})"><span style="font-size:1.1rem">⚡</span> PAY ₹${amount} via Synex Pay</button><div style="margin-top:10px;font-family:Rajdhani,sans-serif;font-size:.68rem;color:var(--muted)">🔒 Secure · Instant Credit · No Manual Approval</div></div>`;
-  const sb=document.getElementById('pay-status-box');if(sb)sb.style.display='none';
-}
+// ── MAIN: GENERATE QR ──
+async function generateQR(amount) {
+  if (!currentUser || !userData) { showToast('Login first','error'); return; }
 
-async function launchSynexPay(amount) {
-  if(!currentUser||!userData){showToast('Login first','error');return;}
-  clearInterval(synexPollInterval);synexCreditDone=false;
-  const orderNote=currentUser.uid.slice(0,8)+'-'+Date.now();
-  synexCurrentOrderNote=orderNote;synexCurrentAmount=amount;
-  const btn=document.getElementById('main-pay-btn');
-  if(btn){btn.classList.add('processing');btn.innerHTML='<div class="spin" style="width:16px;height:16px;border-color:rgba(255,255,255,.3);border-top-color:#fff;display:inline-block"></div>&nbsp;Processing...';btn.disabled=true;}
-  const depositKey=db.ref().push().key,txKey=db.ref().push().key;
-  synexCurrentDepositKey=depositKey;synexCurrentTxKey=txKey;
-  try{
-    const upd={};
-    upd['instantDeposits/'+depositKey]={userId:currentUser.uid,userName:userData.name||'',email:currentUser.email||'',amount,status:'pending',createdAt:Date.now(),orderNote,source:'synexpay'};
-    upd['users/'+currentUser.uid+'/transactions/'+txKey]={type:'Deposit',amount,date:Date.now(),status:'pending',desc:'Synex Pay — Awaiting payment',_depositKey:depositKey};
+  // Stop any previous session
+  clearSynexState();
+  synexCurrentAmount = amount;
+  synexCreditDone    = false;
+
+  // Show loading state in area
+  const area = document.getElementById('synex-pay-area');
+  area.innerHTML = `
+    <div style="text-align:center;padding:24px 0;color:var(--muted);font-family:'Rajdhani',sans-serif">
+      <div class="spin" style="width:24px;height:24px;margin:0 auto 10px;border-width:3px"></div>
+      <div style="font-size:.82rem">QR generate ho raha hai...</div>
+    </div>`;
+  const sb = document.getElementById('pay-status-box');
+  if (sb) sb.style.display = 'none';
+
+  // Create order note = uid_slice + timestamp
+  const orderNote = currentUser.uid.slice(0,8) + '-' + Date.now();
+  synexOrderNote = orderNote;
+
+  // Firebase pending entry
+  const depositKey = db.ref().push().key;
+  const txKey      = db.ref().push().key;
+  synexDepositKey  = depositKey;
+  synexTxKey       = txKey;
+
+  try {
+    const upd = {};
+    upd['instantDeposits/' + depositKey] = {
+      userId: currentUser.uid, userName: userData.name || '',
+      email: currentUser.email || '', amount, status: 'pending',
+      createdAt: Date.now(), orderNote, source: 'synexpay_qr'
+    };
+    upd['users/' + currentUser.uid + '/transactions/' + txKey] = {
+      type: 'Deposit', amount, date: Date.now(), status: 'pending',
+      desc: 'Synex Pay QR — Awaiting payment', _depositKey: depositKey
+    };
     await db.ref().update(upd);
-  }catch(e){console.error('Firebase write:',e);}
-  showPayStatus('waiting','⏳ UPI app open ho raha hai... Payment ke baad auto credit hoga!');
-  if(typeof SynexPay!=='undefined'){
-    try{
-      SynexPay.open({
-        amount,note:orderNote,
-        onSuccess:async function(){await creditSynexPayment(amount,depositKey,txKey,orderNote);},
-        onClose:function(){showPayStatus('waiting','⏳ Payment detect ho raha hai... Wait karo.');startSynexPoll(amount,depositKey,txKey,orderNote);}
-      });
-    }catch(e){console.error('SynexPay widget error:',e);}
+  } catch(e) { console.error('Firebase write:', e); }
+
+  // Try to create payment on backend → get UPI ID
+  let upiId   = 'aqdaskhan03@fam'; // fallback
+  let upiName = 'Synex';
+  let paymentId = null;
+
+  try {
+    const res = await fetch(SYNEX_BACKEND + '/api/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-webhook-secret': SYNEX_SECRET
+      },
+      body: JSON.stringify({ amount, note: orderNote, userId: currentUser.uid, userName: userData.name || '' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // Backend payment ID
+      paymentId = data.id || data._id || data.paymentId || null;
+      // UPI from response
+      if (data.upiId)   upiId   = data.upiId;
+      if (data.upiName) upiName = data.upiName;
+      if (data.upi)     upiId   = data.upi;
+    }
+  } catch(e) {
+    // Backend create failed — get UPI from settings fallback
+    try {
+      const snap = await db.ref('settings/upi').once('value');
+      if (snap.exists()) { const d = snap.val(); upiId = d.id || upiId; upiName = d.name || upiName; }
+    } catch(e2) {}
   }
-  startSynexPoll(amount,depositKey,txKey,orderNote);
+
+  // QR expiry: 5 minutes
+  synexQrExpiry = Date.now() + 5 * 60 * 1000;
+
+  // UPI deep link string
+  const upiStr = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(orderNote)}`;
+  const qrUrl  = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiStr)}`;
+
+  // Render QR UI
+  area.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(124,77,255,.08),rgba(0,229,255,.05));border:1px solid rgba(0,229,255,.25);border-radius:16px;padding:16px;text-align:center">
+
+      <!-- Amount tag -->
+      <div style="font-family:Orbitron,monospace;font-size:1.5rem;font-weight:900;color:var(--gold);margin-bottom:2px">₹${amount}</div>
+      <div style="font-family:Rajdhani,sans-serif;font-size:.7rem;color:var(--muted);margin-bottom:12px">Exact amount scan karke pay karo</div>
+
+      <!-- QR Box -->
+      <div style="width:180px;height:180px;background:#fff;border-radius:12px;margin:0 auto 10px;padding:6px;border:3px solid rgba(0,229,255,.4);position:relative;display:flex;align-items:center;justify-content:center" id="qr-box">
+        <div class="spin" style="width:20px;height:20px;border-width:3px" id="qr-loading"></div>
+      </div>
+      <img id="qr-img" src="${qrUrl}"
+        style="display:none;width:180px;height:180px;border-radius:12px;border:3px solid rgba(0,229,255,.4);margin:0 auto 10px;object-fit:cover"
+        onload="document.getElementById('qr-box').style.display='none';this.style.display='block'"
+        onerror="document.getElementById('qr-loading').textContent='QR load failed';this.style.display='none'">
+
+      <!-- UPI ID -->
+      <div style="font-family:Rajdhani,sans-serif;font-size:.8rem;color:var(--muted);margin-bottom:8px">UPI: <b style="color:var(--cyan)">${upiId}</b></div>
+
+      <!-- UPI App Icons -->
+      <div style="display:flex;justify-content:center;gap:12px;margin-bottom:12px">
+        <a href="gpay://upi/pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none">
+          <div style="width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#4285f4,#34a853);display:flex;align-items:center;justify-content:center"><i class="fab fa-google" style="color:#fff;font-size:.9rem"></i></div>
+          <span style="font-size:.6rem;color:var(--muted);font-family:Rajdhani,sans-serif">GPay</span>
+        </a>
+        <a href="phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none">
+          <div style="width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#5f259f,#3a0ca3);display:flex;align-items:center;justify-content:center"><i class="fas fa-mobile-alt" style="color:#fff;font-size:.9rem"></i></div>
+          <span style="font-size:.6rem;color:var(--muted);font-family:Rajdhani,sans-serif">PhonePe</span>
+        </a>
+        <a href="paytmmp://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none">
+          <div style="width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#00b9f1,#0062cc);display:flex;align-items:center;justify-content:center"><i class="fas fa-wallet" style="color:#fff;font-size:.9rem"></i></div>
+          <span style="font-size:.6rem;color:var(--muted);font-family:Rajdhani,sans-serif">Paytm</span>
+        </a>
+        <a href="upi://pay?pa=${upiId}&pn=${encodeURIComponent(upiName)}&am=${amount}&cu=INR" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none">
+          <div style="width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#ff7300,#e84e0f);display:flex;align-items:center;justify-content:center"><i class="fas fa-university" style="color:#fff;font-size:.9rem"></i></div>
+          <span style="font-size:.6rem;color:var(--muted);font-family:Rajdhani,sans-serif">BHIM</span>
+        </a>
+      </div>
+
+      <!-- Timer -->
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.3);border-radius:8px;padding:7px 16px;font-family:Orbitron,monospace;font-size:.82rem;color:var(--warn)" id="qr-timer-row">
+        <i class="fas fa-clock"></i><span id="qr-countdown">05:00</span>
+      </div>
+      <div style="margin-top:8px;font-family:Rajdhani,sans-serif;font-size:.68rem;color:var(--muted)">
+        ⚡ Payment ke baad 5-10 sec mein auto credit hoga
+      </div>
+    </div>`;
+
+  // Start countdown timer
+  startQrCountdown();
+
+  // Start polling for payment
+  startSynexPoll(amount, depositKey, txKey, orderNote, paymentId);
 }
 
-function showPayStatus(type,msg) {
-  const sb=document.getElementById('pay-status-box');if(!sb)return;
-  sb.style.display='flex';sb.className='pay-status-box '+type;
-  const icon=type==='waiting'?'<div class="spin" style="width:16px;height:16px;flex-shrink:0"></div>':type==='success'?'<span style="font-size:1.2rem">✅</span>':'<span style="font-size:1.2rem">❌</span>';
-  sb.innerHTML=icon+'<span>'+msg+'</span>';
-}
-
-function startSynexPoll(amount,depositKey,txKey,orderNote) {
-  clearInterval(synexPollInterval);let attempts=0;
-  synexPollInterval=setInterval(async()=>{
-    if(synexCreditDone){clearInterval(synexPollInterval);return;}
-    attempts++;
-    if(attempts>36){
+// ── COUNTDOWN TIMER ──
+function startQrCountdown() {
+  clearInterval(synexQrTimer);
+  synexQrTimer = setInterval(() => {
+    const remaining = synexQrExpiry - Date.now();
+    const el = document.getElementById('qr-countdown');
+    const row = document.getElementById('qr-timer-row');
+    if (!el) { clearInterval(synexQrTimer); return; }
+    if (remaining <= 0) {
+      clearInterval(synexQrTimer);
       clearInterval(synexPollInterval);
-      showPayStatus('error','❌ Payment detect nahi hua. Admin se contact karo ya dobara try karo.');
-      const btn=document.getElementById('main-pay-btn');
-      if(btn){btn.classList.remove('processing');btn.disabled=false;btn.innerHTML='<span>⚡</span> PAY ₹'+amount+' via Synex Pay';}
+      if (el) el.textContent = 'EXPIRED';
+      if (row) { row.style.color = 'var(--danger)'; row.style.borderColor = 'rgba(255,68,68,.3)'; row.style.background = 'rgba(255,68,68,.06)'; }
+      showPayStatus('error', '❌ QR expire ho gaya. Naya amount select karo.');
       return;
     }
-    try{const snap=await db.ref('instantDeposits/'+depositKey+'/status').once('value');if(snap.val()==='paid'&&!synexCreditDone){clearInterval(synexPollInterval);await creditSynexPayment(amount,depositKey,txKey,orderNote,true);return;}}catch(e){}
-    try{
-      const res=await fetch(SYNEX_BACKEND+'/api/payments',{headers:{'x-webhook-secret':SYNEX_SECRET,'Content-Type':'application/json'}});
-      if(!res.ok)return;
-      const data=await res.json();const payments=data.payments||data.data||(Array.isArray(data)?data:[]);
-      const match=payments.find(p=>(p.note===orderNote||p.orderId===orderNote)&&['paid','completed','success'].includes((p.status||'').toLowerCase()));
-      if(match&&!synexCreditDone){clearInterval(synexPollInterval);await creditSynexPayment(amount,depositKey,txKey,orderNote);}
-    }catch(e){}
-  },5000);
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    el.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    // Last 60 sec → red warning
+    if (remaining < 60000 && row) {
+      row.style.color = 'var(--danger)';
+      row.style.borderColor = 'rgba(255,68,68,.3)';
+      row.style.background = 'rgba(255,68,68,.06)';
+    }
+  }, 1000);
 }
 
-async function creditSynexPayment(amount,depositKey,txKey,orderNote,skipCheck) {
-  if(synexCreditDone)return;
-  if(!skipCheck){try{const c=await db.ref('instantDeposits/'+depositKey+'/status').once('value');if(c.val()==='paid'){synexCreditDone=true;return;}}catch(e){}}
-  synexCreditDone=true;clearInterval(synexPollInterval);
-  try{
-    const walSnap=await db.ref('users/'+currentUser.uid+'/wallet').once('value');
-    const curBal=walSnap.val()||0,newBal=curBal+amount;const upd={};
-    upd['users/'+currentUser.uid+'/wallet']=newBal;
-    if(txKey){upd['users/'+currentUser.uid+'/transactions/'+txKey+'/status']='completed';upd['users/'+currentUser.uid+'/transactions/'+txKey+'/desc']='Synex Pay — Confirmed ✓';}
-    upd['instantDeposits/'+depositKey+'/status']='paid';upd['instantDeposits/'+depositKey+'/paidAt']=Date.now();
-    await db.ref().update(upd);userData.wallet=newBal;
-    const nk=db.ref().push().key;
-    await db.ref('notifications/'+currentUser.uid+'/'+nk).set({title:'✅ Payment Confirmed!',body:'₹'+amount+' wallet mein add ho gaya! 🎉',type:'deposit',date:Date.now(),read:false});
-    showPayStatus('success','✅ ₹'+amount+' wallet mein add ho gaya! 🎉');
-    showToast('₹'+amount+' credited! 🎉','success');
-    setTimeout(()=>closeModal('modal-addmoney'),2000);
-  }catch(e){console.error('Credit error:',e);showPayStatus('error','❌ Credit error. Admin se contact karo.');}
+// ── POLL BACKEND FOR PAYMENT ──
+function startSynexPoll(amount, depositKey, txKey, orderNote, paymentId) {
+  clearInterval(synexPollInterval);
+  let attempts = 0;
+  const maxAttempts = 60; // 5 min (every 5 sec)
+
+  synexPollInterval = setInterval(async () => {
+    if (synexCreditDone) { clearInterval(synexPollInterval); return; }
+    if (Date.now() > synexQrExpiry) { clearInterval(synexPollInterval); return; }
+    attempts++;
+    if (attempts > maxAttempts) { clearInterval(synexPollInterval); return; }
+
+    // 1. Firebase realtime check (admin ne Mark Paid kiya?)
+    try {
+      const snap = await db.ref('instantDeposits/' + depositKey + '/status').once('value');
+      if (snap.val() === 'paid' && !synexCreditDone) {
+        clearInterval(synexPollInterval);
+        clearInterval(synexQrTimer);
+        await creditWallet(amount, depositKey, txKey);
+        return;
+      }
+    } catch(e) {}
+
+    // 2. Synex Pay backend check
+    try {
+      // Try specific payment ID first
+      let paid = false;
+      if (paymentId) {
+        const res = await fetch(`${SYNEX_BACKEND}/api/payments/${paymentId}`, {
+          headers: { 'x-webhook-secret': SYNEX_SECRET }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const status = (data.status || '').toLowerCase();
+          paid = ['paid','completed','success'].includes(status);
+        }
+      }
+      // Fallback: search by note in payments list
+      if (!paid) {
+        const res = await fetch(`${SYNEX_BACKEND}/api/payments`, {
+          headers: { 'x-webhook-secret': SYNEX_SECRET }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.payments || data.data || (Array.isArray(data) ? data : []);
+          const match = list.find(p =>
+            (p.note === orderNote || p.orderId === orderNote) &&
+            ['paid','completed','success'].includes((p.status || '').toLowerCase())
+          );
+          paid = !!match;
+        }
+      }
+      if (paid && !synexCreditDone) {
+        clearInterval(synexPollInterval);
+        clearInterval(synexQrTimer);
+        await creditWallet(amount, depositKey, txKey);
+      }
+    } catch(e) { /* silent */ }
+  }, 5000);
 }
 
-// Admin functions
-async function loadInstantDepRequests() {
-  const el=document.getElementById('a-instant-dep-list');if(!el)return;
-  el.innerHTML='<div class="loading-wrap"><div class="spin"></div></div>';
-  try{
-    const fbSnap=await db.ref('instantDeposits').orderByChild('status').equalTo('pending').once('value');
-    let rows=[];if(fbSnap.exists())fbSnap.forEach(c=>rows.push({...c.val(),_key:c.key}));
-    try{
-      const res=await fetch(SYNEX_BACKEND+'/api/payments',{headers:{'x-webhook-secret':SYNEX_SECRET}});
-      if(res.ok){const data=await res.json();const payments=data.payments||data.data||(Array.isArray(data)?data:[]);
-        payments.filter(p=>['pending','processing'].includes((p.status||'').toLowerCase())).forEach(p=>{const exists=rows.some(r=>r.orderNote===(p.note||p.orderId));if(!exists)rows.push({_key:'sp-'+p.id,_fromSynexPay:true,userName:p.name||'—',email:p.email||'—',amount:p.amount,orderNote:p.note||p.orderId||'—',status:'pending',createdAt:p.createdAt||Date.now(),userId:'',paymentId:p.id||p._id});});}
-    }catch(e){}
-    if(!rows.length){el.innerHTML='<div class="empty"><i class="fas fa-check-circle"></i><p>No pending deposits</p></div>';return;}
-    rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    el.innerHTML=rows.map(r=>`<div class="acard"><div class="req-row"><div class="req-info"><div class="rname">${r.userName} <span style="color:var(--muted);font-size:.68rem">${r.email||''}</span>${r._fromSynexPay?' <span style="background:rgba(124,77,255,.15);border:1px solid var(--purple);color:var(--purple);padding:1px 6px;border-radius:6px;font-size:.6rem;font-family:Rajdhani,sans-serif">Synex Pay</span>':''}</div><div class="ramt">₹${r.amount}</div><div class="rutr">Note: ${r.orderNote||'—'} · ${new Date(r.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div><div class="req-btns"><button class="sm-btn" onclick="adminApproveSynexDep('${r._key}','${r.userId||''}',${r.amount},'${r.orderNote||''}')">✓ Mark Paid</button><button class="sm-btn rej" onclick="adminRejectSynexDep('${r._key}','${r.userId||''}')">✗ Reject</button></div></div></div>`).join('');
-  }catch(e){el.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';}
-}
+// ── CREDIT WALLET ──
+async function creditWallet(amount, depositKey, txKey) {
+  if (synexCreditDone) return;
+  // Double-credit guard
+  try {
+    const check = await db.ref('instantDeposits/' + depositKey + '/status').once('value');
+    if (check.val() === 'paid') { synexCreditDone = true; return; }
+  } catch(e) {}
 
-async function adminApproveSynexDep(key,userId,amount,orderNote) {
-  if(!userId){try{const snap=await db.ref('instantDeposits').orderByChild('orderNote').equalTo(orderNote).once('value');if(snap.exists())snap.forEach(c=>{userId=c.val().userId;key=c.key;});}catch(e){}}
-  if(!userId){showToast('User ID nahi mila','error');return;}
-  try{
-    const cur=(await db.ref('users/'+userId+'/wallet').once('value')).val()||0;const newBal=cur+amount;const txKey=db.ref().push().key;const upd={};
-    upd['users/'+userId+'/wallet']=newBal;upd['users/'+userId+'/transactions/'+txKey]={type:'Deposit',amount,date:Date.now(),status:'completed',desc:'Admin approved – Synex Pay'};upd['instantDeposits/'+key+'/status']='paid';
-    const txSnap=await db.ref('users/'+userId+'/transactions').orderByChild('status').equalTo('pending').once('value');
-    if(txSnap.exists())txSnap.forEach(c=>{if(c.val().type==='Deposit'&&Math.abs(c.val().amount-amount)<1)upd['users/'+userId+'/transactions/'+c.key+'/status']='completed';});
+  synexCreditDone = true;
+  try {
+    const walSnap = await db.ref('users/' + currentUser.uid + '/wallet').once('value');
+    const newBal  = (walSnap.val() || 0) + amount;
+    const upd     = {};
+    upd['users/' + currentUser.uid + '/wallet'] = newBal;
+    upd['instantDeposits/' + depositKey + '/status']  = 'paid';
+    upd['instantDeposits/' + depositKey + '/paidAt']  = Date.now();
+    if (txKey) {
+      upd['users/' + currentUser.uid + '/transactions/' + txKey + '/status'] = 'completed';
+      upd['users/' + currentUser.uid + '/transactions/' + txKey + '/desc']   = '✅ Synex Pay — Payment confirmed';
+    }
     await db.ref().update(upd);
-    const nk=db.ref().push().key;await db.ref('notifications/'+userId+'/'+nk).set({title:'✅ Payment Confirmed!',body:'₹'+amount+' wallet mein add!',type:'deposit',date:Date.now(),read:false});
-    showToast('Deposit approved ✓','success');loadInstantDepRequests();
-  }catch(e){showToast('Error','error');}
+    userData.wallet = newBal;
+
+    // Notification
+    const nk = db.ref().push().key;
+    await db.ref('notifications/' + currentUser.uid + '/' + nk).set({
+      title: '✅ Payment Confirmed!',
+      body:  `₹${amount} wallet mein add ho gaya! 🎉`,
+      type:  'deposit', date: Date.now(), read: false
+    });
+
+    // Show success in QR area
+    const area = document.getElementById('synex-pay-area');
+    if (area) {
+      area.innerHTML = `
+        <div style="text-align:center;padding:28px 16px;background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.3);border-radius:16px">
+          <div style="font-size:3.5rem;margin-bottom:10px">✅</div>
+          <div style="font-family:Orbitron,monospace;font-size:1.2rem;font-weight:900;color:var(--success);margin-bottom:4px">₹${amount} Credited!</div>
+          <div style="font-family:Rajdhani,sans-serif;font-size:.82rem;color:rgba(255,255,255,.6)">Payment successful — wallet updated!</div>
+        </div>`;
+    }
+    showToast(`₹${amount} credited! 🎉`, 'success');
+    setTimeout(() => closeModal('modal-addmoney'), 2200);
+  } catch(e) {
+    console.error('Credit error:', e);
+    showPayStatus('error', '❌ Credit mein error aaya. Admin se contact karo.');
+  }
 }
 
-async function adminRejectSynexDep(key,userId) {
-  try{await db.ref('instantDeposits/'+key+'/status').set('rejected');
-    if(userId){const nk=db.ref().push().key;await db.ref('notifications/'+userId+'/'+nk).set({title:'❌ Payment Rejected',body:'Deposit reject ho gaya. Dobara try karo.',type:'default',date:Date.now(),read:false});}
-    showToast('Rejected','warn');loadInstantDepRequests();
-  }catch(e){showToast('Error','error');}
+function showPayStatus(type, msg) {
+  const sb = document.getElementById('pay-status-box');
+  if (!sb) return;
+  sb.style.display = 'flex';
+  sb.className = 'pay-status-box ' + type;
+  const icon = type === 'waiting' ? '<div class="spin" style="width:16px;height:16px;flex-shrink:0"></div>' :
+               type === 'success' ? '<span style="font-size:1.2rem">✅</span>' : '<span style="font-size:1.2rem">❌</span>';
+  sb.innerHTML = icon + '<span>' + msg + '</span>';
+}
+
+// ══ ADMIN: Synex Pay Deposits ══
+async function loadInstantDepRequests() {
+  const el = document.getElementById('a-instant-dep-list');
+  if (!el) return;
+  el.innerHTML = '<div class="loading-wrap"><div class="spin"></div></div>';
+  try {
+    const fbSnap = await db.ref('instantDeposits').orderByChild('status').equalTo('pending').once('value');
+    let rows = [];
+    if (fbSnap.exists()) fbSnap.forEach(c => rows.push({ ...c.val(), _key: c.key }));
+
+    // Also fetch from backend
+    try {
+      const res = await fetch(SYNEX_BACKEND + '/api/payments', {
+        headers: { 'x-webhook-secret': SYNEX_SECRET }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.payments || data.data || (Array.isArray(data) ? data : []);
+        list.filter(p => ['pending','processing'].includes((p.status||'').toLowerCase()))
+            .forEach(p => {
+              const exists = rows.some(r => r.orderNote === (p.note || p.orderId));
+              if (!exists) rows.push({
+                _key: 'sp-' + (p.id || p._id),
+                _fromBackend: true,
+                userName: p.name || p.userName || '—',
+                email: p.email || '—',
+                amount: p.amount,
+                orderNote: p.note || p.orderId || '—',
+                status: 'pending',
+                createdAt: p.createdAt || Date.now(),
+                userId: '',
+                paymentId: p.id || p._id
+              });
+            });
+      }
+    } catch(e) {}
+
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><i class="fas fa-check-circle"></i><p>No pending deposits</p></div>';
+      return;
+    }
+    rows.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    el.innerHTML = rows.map(r => `
+      <div class="acard"><div class="req-row">
+        <div class="req-info">
+          <div class="rname">${r.userName}
+            <span style="color:var(--muted);font-size:.68rem">${r.email || ''}</span>
+            ${r._fromBackend ? '<span style="background:rgba(0,229,255,.1);border:1px solid var(--cyan);color:var(--cyan);padding:1px 6px;border-radius:6px;font-size:.6rem;font-family:Rajdhani,sans-serif;margin-left:4px">Backend</span>' : ''}
+          </div>
+          <div class="ramt">₹${r.amount}</div>
+          <div class="rutr">Note: ${r.orderNote || '—'}</div>
+          <div class="rutr">${new Date(r.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div class="req-btns">
+          <button class="sm-btn" onclick="adminApproveSynexDep('${r._key}','${r.userId || ''}',${r.amount},'${r.orderNote || ''}')">✓ Paid</button>
+          <button class="sm-btn rej" onclick="adminRejectSynexDep('${r._key}','${r.userId || ''}')">✗ Reject</button>
+        </div>
+      </div></div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><i class="fas fa-exclamation-triangle"></i><p>Failed</p></div>';
+  }
+}
+
+async function adminApproveSynexDep(key, userId, amount, orderNote) {
+  if (!userId) {
+    try {
+      const snap = await db.ref('instantDeposits').orderByChild('orderNote').equalTo(orderNote).once('value');
+      if (snap.exists()) snap.forEach(c => { userId = c.val().userId; key = c.key; });
+    } catch(e) {}
+  }
+  if (!userId) { showToast('User ID nahi mila','error'); return; }
+  try {
+    const cur = (await db.ref('users/' + userId + '/wallet').once('value')).val() || 0;
+    const upd = {};
+    upd['users/' + userId + '/wallet'] = cur + amount;
+    upd['instantDeposits/' + key + '/status'] = 'paid';
+    const txKey = db.ref().push().key;
+    upd['users/' + userId + '/transactions/' + txKey] = {
+      type: 'Deposit', amount, date: Date.now(), status: 'completed', desc: 'Admin approved'
+    };
+    const txSnap = await db.ref('users/' + userId + '/transactions').orderByChild('status').equalTo('pending').once('value');
+    if (txSnap.exists()) txSnap.forEach(c => {
+      if (c.val().type === 'Deposit' && Math.abs(c.val().amount - amount) < 1)
+        upd['users/' + userId + '/transactions/' + c.key + '/status'] = 'completed';
+    });
+    await db.ref().update(upd);
+    const nk = db.ref().push().key;
+    await db.ref('notifications/' + userId + '/' + nk).set({
+      title: '✅ Payment Confirmed!', body: '₹' + amount + ' wallet mein add!',
+      type: 'deposit', date: Date.now(), read: false
+    });
+    showToast('Deposit approved ✓','success');
+    loadInstantDepRequests();
+  } catch(e) { showToast('Error','error'); }
+}
+
+async function adminRejectSynexDep(key, userId) {
+  try {
+    await db.ref('instantDeposits/' + key + '/status').set('rejected');
+    if (userId) {
+      const nk = db.ref().push().key;
+      await db.ref('notifications/' + userId + '/' + nk).set({
+        title: '❌ Payment Rejected', body: 'Deposit reject ho gaya. Dobara try karo.',
+        type: 'default', date: Date.now(), read: false
+      });
+    }
+    showToast('Rejected','warn');
+    loadInstantDepRequests();
+  } catch(e) { showToast('Error','error'); }
 }
 
 initFirebase();
